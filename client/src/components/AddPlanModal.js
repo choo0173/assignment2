@@ -7,6 +7,7 @@ import Form from "react-bootstrap/Form";
 import Col from "react-bootstrap/Col";
 import Row from "react-bootstrap/Row";
 import userService from "../service/user.service";
+import { toast } from "react-toastify";
 
 function AddPlanModal(props) {
   const [showPlans, setPlans] = useState("");
@@ -23,12 +24,13 @@ function AddPlanModal(props) {
       planEnd: showplanEnd,
       planAppAcronym: appName,
       planColor: showplanColor
+      // planColor: " "
     };
 
     userService.createPlan(planInfo).then((response) => {
-      // notify(response.isGroup, response.bmessage);
+      notify(response);
       console.log(response);
-      if (response.result == true) {
+      if (response.create === "Plan Created") {
         setPlans("");
         setplanStart("");
         setplanEnd("");
@@ -40,6 +42,18 @@ function AddPlanModal(props) {
       }
     });
   }
+
+  const notify = (error_msg) => {
+    if (error_msg.duplicate != false) {
+      toast.error(error_msg.duplicate, {});
+    }
+    if (error_msg.create != false) {
+      toast.success(error_msg.create, {});
+    }
+    if (error_msg.mandatory != false) {
+      toast.warning(error_msg.mandatory, {});
+    }
+  };
   return (
     <>
       <Modal size="lg" show={props.show} cancel={props.close} centered>
@@ -51,7 +65,7 @@ function AddPlanModal(props) {
             <Row className="mb-3">
               <Form.Group as={Col}>
                 <Form.Label>
-                  Plan Name
+                  Plan Name *
                   <Form.Text className="text-muted m-0">
                     Max characters: 15
                   </Form.Text>
@@ -65,7 +79,7 @@ function AddPlanModal(props) {
                 />
               </Form.Group>
               <Form.Group as={Col}>
-                <Form.Label className="mb-4">Start Date</Form.Label>
+                <Form.Label className="mb-4">Start Date *</Form.Label>
                 <Form.Control
                   type="date"
                   onChange={(e) => {
@@ -75,7 +89,7 @@ function AddPlanModal(props) {
                 />
               </Form.Group>{" "}
               <Form.Group as={Col}>
-                <Form.Label className="mb-4">End Date</Form.Label>
+                <Form.Label className="mb-4">End Date *</Form.Label>
                 <Form.Control
                   type="date"
                   onChange={(e) => {

@@ -9,6 +9,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 const controller = require("./controller/user.controller");
 const urlencodedParser = bodyParser.urlencoded({ extended: false });
+const user_model = require("./model/user.model");
 
 const PORT = process.env.PORT || 3001;
 
@@ -39,8 +40,12 @@ app.post("/createPlan", controller.createPlan);
 app.post("/viewPlans", controller.viewPlans);
 app.post("/viewPlanColor", controller.viewPlanColor);
 app.post("/createTask", controller.createTask);
+app.post("/createTaskA3", controller.createTaskA3);
 app.post("/viewTasks", controller.viewTasks);
 app.post("/updateTask", controller.updateTask);
-app.post("/updateTaskState", controller.updateTaskState);
+// app.post("/updateTaskState", controller.updateTaskState);
 app.post("/updateTaskStateNotes", controller.updateTaskStateNotes);
 app.post("/countTasksbyApp", controller.countTasksbyApp);
+app.post("/checkAppPermits", controller.checkAppPermits);
+app.post("/checkGroupFunction", controller.checkGroupFunction);
+app.post("/allUserEmail", user_model.getAllUserEmail);

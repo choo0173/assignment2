@@ -13,9 +13,8 @@ import moment from "moment";
 function TaskCard(props) {
   const [showViewTaskModal, setShowViewTaskModal] = useState(false);
   const [showTaskState, setTaskState] = useState(props.task.taskState);
-  const [showtaskAuditNotes, settaskAuditNotes] = useState(
-    props.task.taskAuditNotes
-  );
+  const [showUserEmail, setUserEmail] = useState("");
+  // const [showPlanColor, setPlanColor] = useState("");
   const [showPlanList, setPlanList] = useState([]);
   let username = sessionStorage.getItem("username");
   const formatDate = moment().format("YYYY-MM-DD HH:mm:ss");
@@ -23,19 +22,24 @@ function TaskCard(props) {
   const planInfo = {
     planAppAcronym: appName
   };
+  const planColourInfo = {
+    planAppAcronym: appName,
+    planMVPName: props.task.taskPlanMVPName
+  };
   const taskInfo = {
     taskAppAcronym: appName
   };
 
   const updateTaskStateInfo = {
     taskState: showTaskState,
-    taskName: props.task.taskName,
+    taskId: props.task.taskId,
     taskAppAcronym: props.task.taskAppAcronym
   };
 
   // Styling
   const styleObj = {
     borderColor: props.task.taskPlanColor,
+    // borderColor: showPlanColor,
     borderWidth: "2px"
     // width: "195px"
   };
@@ -69,9 +73,9 @@ function TaskCard(props) {
   };
 
   useEffect(() => {
-    userService.updateTaskState(updateTaskStateInfo).then((response) => {
-      // props.setTaskUpdateState(true);
-    });
+    // userService.updateTaskState(updateTaskStateInfo).then((response) => {
+    //   // props.setTaskUpdateState(true);
+    // });
     props.setSubmit(true);
     // props.handleShiftCard.setShiftCard(true);
     // fetchTasks();
@@ -79,6 +83,8 @@ function TaskCard(props) {
 
   useEffect(() => {
     fetchPlans();
+    fetchUserInfo();
+    // fetchPlanColor();
   }, []);
 
   // API call for fetching plans
@@ -92,17 +98,20 @@ function TaskCard(props) {
       );
     });
   };
-
-  // API call for fetching applications
-  // const fetchTasks = async () => {
-  //   await userService.viewTasks(taskInfo).then((response) => {
-  //     setTaskList(
-  //       response.map((task) => {
-  //         return task;
-  //       })
-  //     );
+  // const fetchPlanColor = async () => {
+  //   userService.viewPlanColor(planColourInfo).then((response) => {
+  //     console.log(response);
+  //     setPlanColor(response);
   //   });
   // };
+
+  const fetchUserInfo = () => {
+    userService.viewOneUser({ userName: username }).then((response) => {
+      console.log(response.result[0].userEmail);
+      setUserEmail(response.result[0].userEmail);
+    });
+  };
+
   // Handle Promote
   const handlePromote = (e) => {
     e.preventDefault();
@@ -112,9 +121,6 @@ function TaskCard(props) {
       if (props.task.taskState === arrayStates[i]) {
         setTaskState(arrayStates[i + 1]);
         let promoteState = arrayStates[i + 1];
-        // console.log("+++++++++++++++");
-        // console.log(showtaskAuditNotes);
-        // console.log("=========");
         const auditlog =
           formatDate +
           " " +
@@ -123,28 +129,17 @@ function TaskCard(props) {
           showTaskState +
           " to " +
           promoteState;
-        const passauditlog = !showtaskAuditNotes
+        const passauditlog = !props.task.taskAuditNotes
           ? auditlog
-          : showtaskAuditNotes + "\n" + auditlog;
-        console.log("PASSS AUDIT LOG");
-        console.log(passauditlog);
+          : auditlog + "\n" + props.task.taskAuditNotes;
+
         try {
-          // const auditlog =
-          //   formatDate +
-          //   " " +
-          //   username +
-          //   " promoted task from " +
-          //   showTaskState +
-          //   " to " +
-          //   promoteState;
-          // const passauditlog = !showtaskAuditNotes
-          //   ? auditlog
-          //   : showtaskAuditNotes + "\n" + auditlog;
           const updateTaskStateNotesInfo = {
-            taskName: props.task.taskName,
-            taskNotes: props.task.taskName,
+            taskId: props.task.taskId,
+            taskNotes: props.task.taskNotes,
             taskAuditNotes: passauditlog,
-            taskOwner: username
+            taskOwner: username,
+            taskState: promoteState
           };
           // Update Audit trail
           userService
@@ -159,6 +154,15 @@ function TaskCard(props) {
                 console.log("Stop");
               }
             });
+          if (props.task.taskState === arrayStates[2]) {
+            const emailInfo = {
+              taskName: props.task.taskName,
+              userName: username,
+              taskAppAcronym: appName,
+              userEmail: showUserEmail
+            };
+            userService.sendEmail(emailInfo);
+          }
         } catch (err) {
           console.log(err);
         }
@@ -185,14 +189,16 @@ function TaskCard(props) {
             showTaskState +
             " to " +
             demoteState;
-          const passauditlog = !showtaskAuditNotes
+          const passauditlog = !props.task.taskAuditNotes
             ? auditlog
-            : showtaskAuditNotes + "\n" + auditlog;
+            : auditlog + "\n" + props.task.taskAuditNotes;
+
           const updateTaskStateNotesInfo = {
-            taskName: props.task.taskName,
-            taskNotes: props.task.taskName,
+            taskId: props.task.taskId,
+            taskNotes: props.task.taskNotes,
             taskAuditNotes: passauditlog,
-            taskOwner: username
+            taskOwner: username,
+            taskState: demoteState
           };
           // Update Audit trail
           userService
@@ -229,25 +235,56 @@ function TaskCard(props) {
                     close={() => setShowViewTaskModal(false)}
                     id={props.task.taskName}
                     taskDetails={props.task}
-                    // setTaskUpdateState={props.setTaskUpdateState}
-                    // setTaskUpdateChangesState={props.setTaskUpdateChangesState}
-                    // taskList={showtaskPlanList}
-                    // showPlanList={showtaskPlanList}
+                    showPlanList={props.showPlanList}
                     setSubmit={props.setSubmit}
-                    showPlanList={showPlanList}
+                    showIsPOpenRights={props.showIsPOpenRights}
+                    showIsPCreateRights={props.showIsPCreateRights}
+                    showIsPTodoRights={props.showIsPTodoRights}
+                    showIsPDoingRights={props.showIsPDoingRights}
+                    showIsPDoneRights={props.showIsPDoneRights}
                   />
                 </Card.Title>
-                {props.task.taskState == "close" ? (
-                  <Button
-                    title="Expand"
-                    size="sm"
-                    variant="light"
-                    style={{ float: "right" }}
-                    onClick={() => setShowViewTaskModal(true)}
-                  >
-                    <FontAwesomeIcon icon="fa-solid fa-maximize" color="grey" />
-                  </Button>
+                {/* {props.showIsPOpenRights == true ||
+                props.showIsPTodoRights == true ||
+                props.showIsPDoingRights == true ||
+                props.showIsPDoneRights == true ||
+                props.showIsPDoneRights == true ? (
+                  props.task.taskState == "close" ? (
+                    <Button
+                      title="Expand"
+                      size="sm"
+                      variant="light"
+                      style={{ float: "right" }}
+                      onClick={() => setShowViewTaskModal(true)}
+                    >
+                      <FontAwesomeIcon
+                        icon="fa-solid fa-maximize"
+                        color="grey"
+                      />
+                    </Button>
+                  ) : (
+                    <Button
+                      title="Edit"
+                      size="sm"
+                      variant="light"
+                      style={{ float: "right" }}
+                      onClick={() => setShowViewTaskModal(true)}
+                    >
+                      <FontAwesomeIcon
+                        icon="fa-solid fa-pen-to-square"
+                        color="grey"
+                      />
+                    </Button>
+                  )
                 ) : (
+                  <></>
+                )} */}
+
+                {props.showIsPOpenRights == true ||
+                props.showIsPTodoRights == true ||
+                props.showIsPDoingRights == true ||
+                props.showIsPDoneRights == true ||
+                props.showIsPDoneRights == true ? (
                   <Button
                     title="Edit"
                     size="sm"
@@ -260,44 +297,73 @@ function TaskCard(props) {
                       color="grey"
                     />
                   </Button>
+                ) : (
+                  <Button
+                    title="Expand"
+                    size="sm"
+                    variant="light"
+                    style={{ float: "right" }}
+                    onClick={() => setShowViewTaskModal(true)}
+                  >
+                    <FontAwesomeIcon icon="fa-solid fa-maximize" color="grey" />
+                  </Button>
                 )}
               </Row>
 
               <Card.Text style={styletextObj}>{props.task.taskDesc}</Card.Text>
+              <Card.Text style={styleminitextObj}>
+                {"Plan: \t" + props.task.taskPlanMVPName}
+              </Card.Text>
               <Card.Text style={styleminitextObj}>
                 {"Creator: \t" + props.task.taskCreator}
               </Card.Text>
               <Card.Text style={styleminitextObj}>
                 {"Owner: \t" + props.task.taskOwner}
               </Card.Text>
-              {props.task.taskState == "open" ||
-              props.task.taskState == "todo" ? (
-                <div></div>
-              ) : props.task.taskState == "close" ? (
-                <div></div>
+              {props.showIsPOpenRights == true ||
+              props.showIsPTodoRights == true ||
+              props.showIsPDoingRights == true ||
+              props.showIsPDoneRights == true ||
+              props.showIsPDoneRights == true ? (
+                props.task.taskState == "open" ||
+                props.task.taskState == "todo" ? (
+                  <div></div>
+                ) : props.task.taskState == "close" ? (
+                  <div></div>
+                ) : (
+                  <Button
+                    title="Demote"
+                    size="sm"
+                    variant="light"
+                    style={{ float: "left" }}
+                    onClick={handleDemote}
+                  >
+                    <FontAwesomeIcon icon="fa-solid fa-chevron-left" />
+                  </Button>
+                )
               ) : (
-                <Button
-                  title="Demote"
-                  size="sm"
-                  variant="light"
-                  style={{ float: "left" }}
-                  onClick={handleDemote}
-                >
-                  <FontAwesomeIcon icon="fa-solid fa-chevron-left" />
-                </Button>
+                <></>
               )}
-              {props.task.taskState == "close" ? (
-                <div></div>
+              {props.showIsPOpenRights == true ||
+              props.showIsPTodoRights == true ||
+              props.showIsPDoingRights == true ||
+              props.showIsPDoneRights == true ||
+              props.showIsPDoneRights == true ? (
+                props.task.taskState == "close" ? (
+                  <div></div>
+                ) : (
+                  <Button
+                    title="Promote"
+                    size="sm"
+                    variant="light"
+                    style={{ float: "right" }}
+                    onClick={handlePromote}
+                  >
+                    <FontAwesomeIcon icon="fa-solid fa-chevron-right" />
+                  </Button>
+                )
               ) : (
-                <Button
-                  title="Promote"
-                  size="sm"
-                  variant="light"
-                  style={{ float: "right" }}
-                  onClick={handlePromote}
-                >
-                  <FontAwesomeIcon icon="fa-solid fa-chevron-right" />
-                </Button>
+                <></>
               )}
             </Card.Body>
           </Card>
@@ -308,3 +374,33 @@ function TaskCard(props) {
 }
 
 export default TaskCard;
+
+// {props.task.taskState == "open" ||
+// props.task.taskState == "todo" ? (
+//   <div></div>
+// ) : props.task.taskState == "close" ? (
+//   <div></div>
+// ) : (
+//   <Button
+//     title="Demote"
+//     size="sm"
+//     variant="light"
+//     style={{ float: "left" }}
+//     onClick={handleDemote}
+//   >
+//     <FontAwesomeIcon icon="fa-solid fa-chevron-left" />
+//   </Button>
+// )}
+// {props.task.taskState == "close" ? (
+//   <div></div>
+// ) : (
+//   <Button
+//     title="Promote"
+//     size="sm"
+//     variant="light"
+//     style={{ float: "right" }}
+//     onClick={handlePromote}
+//   >
+//     <FontAwesomeIcon icon="fa-solid fa-chevron-right" />
+//   </Button>
+// )}

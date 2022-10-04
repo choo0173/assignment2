@@ -6,11 +6,9 @@ import Col from "react-bootstrap/Col";
 import Row from "react-bootstrap/Row";
 import userService from "../service/user.service";
 import moment from "moment";
+import { toast } from "react-toastify";
 
 function ViewAppModal(props) {
-  // console.log(props.setUpdateSave);
-  // console.log(props.key);
-  // console.log(props);
   const [showapplicationAcronym, setapplicationAcronym] = useState(props.id);
   const [showapplicationDesc, setapplicationDesc] = useState(
     props.appDetails.applicationDesc
@@ -25,24 +23,26 @@ function ViewAppModal(props) {
     props.appDetails.applicationEnd
   );
   const [showapplicationPOpen, setapplicationPOpen] = useState(
-    props.appDetails.applicationPCreate
-  );
-  const [showapplicationPCreate, setapplicationPCreate] = useState(
     props.appDetails.applicationPOpen
   );
+
+  const [showapplicationPCreate, setapplicationPCreate] = useState(
+    props.appDetails.applicationPCreate
+  );
+
   const [showapplicationPTodo, setapplicationPTodo] = useState(
     props.appDetails.applicationPTodo
   );
+
   const [showapplicationPDoing, setapplicationPDoing] = useState(
     props.appDetails.applicationPDoing
   );
+
   const [showapplicationPDone, setapplicationPDone] = useState(
     props.appDetails.applicationPDone
   );
-  const [showGroupList, setGroupList] = useState([]);
 
-  // const [updateSave, setUpdateSave] = useState(false);
-  // const [updateChanges, setUpdateChanges] = useState(false);
+  const [showGroupList, setGroupList] = useState([]);
 
   const styleforminputObj = {
     height: "3.8rem"
@@ -89,8 +89,8 @@ function ViewAppModal(props) {
 
     // Update Task Notes (Audit trail)
     userService.updateApp(updateAppInfo).then((response) => {
-      // notify(response.isGroup, response.bmessage);
-      if (response.isUpdateApp == "success") {
+      notify(response);
+      if (response.update == "Application Updated") {
         console.log("app updated");
         props.setUpdateSave(true);
       } else {
@@ -102,6 +102,14 @@ function ViewAppModal(props) {
     props.close();
   };
 
+  const notify = (error_msg) => {
+    if (error_msg.update == "Application not updated") {
+      toast.error(error_msg.update, {});
+    }
+    if (error_msg.update == "Application Updated") {
+      toast.success(error_msg.update, {});
+    }
+  };
   return (
     <Modal
       size="xl"
@@ -110,11 +118,19 @@ function ViewAppModal(props) {
       centered
       key={props.key}
     >
-      <Modal.Header closeButton={true} onClick={props.close}>
-        <Modal.Title class="formboxheader">
-          Edit {showapplicationAcronym}
-        </Modal.Title>
-      </Modal.Header>
+      {props.isAdminPermit === true || props.isProjectLeadPermit === true ? (
+        <Modal.Header closeButton={true} onClick={props.close}>
+          <Modal.Title class="formboxheader">
+            Edit {showapplicationAcronym}
+          </Modal.Title>
+        </Modal.Header>
+      ) : (
+        <Modal.Header closeButton={true} onClick={props.close}>
+          <Modal.Title class="formboxheader">
+            View {showapplicationAcronym}
+          </Modal.Title>
+        </Modal.Header>
+      )}
       <Modal.Body>
         <Form>
           <Row className="mb-2">
@@ -154,6 +170,14 @@ function ViewAppModal(props) {
                     moment(e.target.value).format("YYYY-MM-DD")
                   );
                 }}
+                disabled={
+                  props.isAdminPermit === true
+                    ? false
+                    : props.isProjectLeadPermit === true
+                    ? false
+                    : true
+                }
+                // disabled={props.isAdminPermit ===true || props.isProjectLeadPermit=== true }
               />
             </Form.Group>{" "}
             <Form.Group as={Col}>
@@ -171,6 +195,13 @@ function ViewAppModal(props) {
                     moment(e.target.value).format("YYYY-MM-DD")
                   );
                 }}
+                disabled={
+                  props.isAdminPermit === true
+                    ? false
+                    : props.isProjectLeadPermit === true
+                    ? false
+                    : true
+                }
               />
             </Form.Group>
           </Row>
@@ -184,6 +215,13 @@ function ViewAppModal(props) {
                 setapplicationDesc(e.target.value);
               }}
               value={showapplicationDesc}
+              disabled={
+                props.isAdminPermit === true
+                  ? false
+                  : props.isProjectLeadPermit === true
+                  ? false
+                  : true
+              }
             />
           </Form.Group>
 
@@ -196,7 +234,14 @@ function ViewAppModal(props) {
                 onChange={(e) => {
                   setapplicationPCreate(e.target.value);
                 }}
-                defaultValue={showapplicationPCreate}
+                defaultValue={props.appDetails.applicationPCreate}
+                disabled={
+                  props.isAdminPermit === true
+                    ? false
+                    : props.isProjectLeadPermit === true
+                    ? false
+                    : true
+                }
               >
                 <option>Choose...</option>
                 {showGroupList.map((group) => {
@@ -217,7 +262,14 @@ function ViewAppModal(props) {
                 onChange={(e) => {
                   setapplicationPOpen(e.target.value);
                 }}
-                defaultValue={showapplicationPOpen}
+                defaultValue={props.appDetails.applicationPOpen}
+                disabled={
+                  props.isAdminPermit === true
+                    ? false
+                    : props.isProjectLeadPermit === true
+                    ? false
+                    : true
+                }
               >
                 <option>Choose...</option>
                 {showGroupList.map((group) => {
@@ -238,7 +290,14 @@ function ViewAppModal(props) {
                 onChange={(e) => {
                   setapplicationPTodo(e.target.value);
                 }}
-                defaultValue={showapplicationPTodo}
+                defaultValue={props.appDetails.applicationPTodo}
+                disabled={
+                  props.isAdminPermit === true
+                    ? false
+                    : props.isProjectLeadPermit === true
+                    ? false
+                    : true
+                }
               >
                 <option>Choose...</option>
                 {showGroupList.map((group) => {
@@ -259,7 +318,14 @@ function ViewAppModal(props) {
                 onChange={(e) => {
                   setapplicationPDoing(e.target.value);
                 }}
-                defaultValue={showapplicationPDoing}
+                defaultValue={props.appDetails.applicationPDoing}
+                disabled={
+                  props.isAdminPermit === true
+                    ? false
+                    : props.isProjectLeadPermit === true
+                    ? false
+                    : true
+                }
               >
                 <option>Choose...</option>
                 {showGroupList.map((group) => {
@@ -277,10 +343,17 @@ function ViewAppModal(props) {
               <Form.Select
                 className="px-2"
                 // defaultValue="Choose..."
-                // onChange={(e) => {
-                //   setapplicationPDone(e.target.value);
-                // }}
-                defaultValue={showapplicationPDone}
+                onChange={(e) => {
+                  setapplicationPDone(e.target.value);
+                }}
+                defaultValue={props.appDetails.applicationPDone}
+                disabled={
+                  props.isAdminPermit === true
+                    ? false
+                    : props.isProjectLeadPermit === true
+                    ? false
+                    : true
+                }
               >
                 <option>Choose...</option>
                 {showGroupList.map((group) => {
@@ -298,30 +371,18 @@ function ViewAppModal(props) {
       <Modal.Footer>
         {/* <Button variant="secondary" onClick={handleClose}>
          */}
-        <Button
-          variant="secondary"
-          onClick={
-            props.close
-            //  = () => {
-            // setapplicationAcronym("");
-            // setapplicationDesc("");
-            // setapplicationRnum("");
-            // setapplicationStart("");
-            // setapplicationEnd("");
-            // setapplicationPOpen("");
-            // setapplicationPCreate("");
-            // setapplicationPTodo("");
-            // setapplicationPDoing("");
-            // setapplicationPDone("");
-            // }
-          }
-        >
+        <Button variant="secondary" onClick={props.close}>
           Back
         </Button>
         {/* <Button variant="success" onClick={handleShow}> */}
-        <Button variant="info" onClick={handleUpdateTask}>
-          Save Changes
-        </Button>
+
+        {props.isAdminPermit === true || props.isProjectLeadPermit === true ? (
+          <Button variant="info" onClick={handleUpdateTask}>
+            Save Changes
+          </Button>
+        ) : (
+          <></>
+        )}
       </Modal.Footer>
     </Modal>
   );

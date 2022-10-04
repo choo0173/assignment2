@@ -209,7 +209,7 @@ const updateUserProfile = async (req, res) => {
 
 //Update Admin Profile
 const updateAdminProfile = async (req, res) => {
-  console.log("What is req.body: ", req.body);
+  // console.log("What is req.body: ", req.body);
   let adminemail = req.body.userEmail;
   let adminpwd = req.body.userPwd;
 
@@ -396,7 +396,7 @@ const updateAdminProfile = async (req, res) => {
 // Create Group
 
 const createGroup = async (req, res) => {
-  console.log(req.body);
+  // console.log(req.body);
   if (checkSpacing(req.body.groupName) === true) {
     console.log(checkSpacing(req.body.groupName));
     usermodel.createGroup(req.body, (err, data) => {
@@ -444,47 +444,45 @@ const viewUserGroupname = (req, res) => {
 // =============== Assignment 2 =============
 // Create App
 const createApp = async (req, res) => {
-  // var error_msg = {
-  //   username: false,
-  //   password: false,
-  //   email: false,
-  //   duplicate: false,
-  //   create: false
-  // };
-  // if (!checkSpacing(req.body.userName) || !checkUserName(req.body.userName)) {
-  //   error_msg.username = "Please enter a valid username";
-  // }
-  // if (!checkPassword(req.body.userPwd)) {
-  //   error_msg.password = "Please enter a valid password";
-  // }
-  // if (!checkEmail(req.body.userEmail)) {
-  //   // res.send({ inputstatus: "fail", message: "Please enter a valid email" });
-  //   error_msg.email = "Please enter a valid email";
-  // }
-  // if (
-  //   error_msg.username ||
-  //   error_msg.password ||
-  //   error_msg.email
-  //   // error_msg.duplicate
-  // ) {
-  //   return res.send(error_msg);
-  // } else {
-  usermodel.createApp(req.body, async (err, data) => {
-    if (err) {
-      // res.send({ duplicate: true });
-      // error_msg.duplicate = "User Exists";
+  var error_msg = {
+    duplicate: false,
+    create: false,
+    mandatory: false
+  };
+  if (
+    !req.body.applicationAcronym ||
+    !req.body.applicationRnum ||
+    !req.body.applicationStart ||
+    !req.body.applicationEnd ||
+    !req.body.applicationPOpen ||
+    !req.body.applicationPCreate ||
+    !req.body.applicationPTodo ||
+    !req.body.applicationPDoing ||
+    !req.body.applicationPDone
+  ) {
+    error_msg.mandatory = "Fill in all mandatory fields";
+    return res.send(error_msg);
+  } else {
+    usermodel.createApp(req.body, async (err, data) => {
+      if (err) {
+        // res.send({ duplicate: true });
+        error_msg.duplicate = "Application Exists";
+        return res.send(error_msg);
+        // console.log(error_msg);
+
+        console.log("error boo");
+      } else {
+        error_msg.create = "Application Created";
+        console.log("app created yay");
+
+        // res.send(data);
+        // console.log(data);
+        res.send(error_msg);
+      }
       // return res.send(error_msg);
-      // console.log(error_msg);
+    });
+  }
 
-      console.log("error boo");
-    } else {
-      // error_msg.create = "User Created";
-      console.log("app created yay");
-
-      res.send(data);
-      console.log(data);
-    }
-  });
   // }
 };
 
@@ -506,7 +504,7 @@ const viewOneApps = async (req, res) => {
       res.send(err, { message: err.sqlMessage });
     } else {
       console.log("one appppp data");
-      console.log(data);
+      // console.log(data);
       res.send(data);
     }
   });
@@ -516,70 +514,48 @@ const viewOneApps = async (req, res) => {
 // applicationPDoing= '${req.applicationPDoing}',applicationPDone= '${req.applicationPDone}'
 //Update Application
 const updateApp = async (req, res) => {
-  console.log(req.body);
+  // console.log(req.body);
+  var error_msg = {
+    update: false
+  };
   await usermodel.updateApp(req.body, (err, data) => {
     if (err) {
-      // console.log(err);
-      // res.send(err, { message: "Failed to update profile" });
-      res.send(err, {
-        isUpdateApp: "fail",
-        inputstatus: "fail",
-        message: "Failed to update profile"
-      });
-    }
-    // else if (data) {
-    //   res.status(200).json({ isUpdateApp: "success" });
-    // }
-    else {
-      res.send({ isUpdateApp: "success" });
-      // res.status(400).json({ Msg: "Error" });
+      error_msg.update = "Application not updated";
+      console.log(err);
+      return res.send(error_msg);
+    } else {
+      error_msg.update = "Application Updated";
+      res.send(error_msg);
     }
   });
 };
 
 // Create Plan
 const createPlan = async (req, res) => {
-  // var error_msg = {
-  //   username: false,
-  //   password: false,
-  //   email: false,
-  //   duplicate: false,
-  //   create: false
-  // };
-  // if (!checkSpacing(req.body.userName) || !checkUserName(req.body.userName)) {
-  //   error_msg.username = "Please enter a valid username";
-  // }
-  // if (!checkPassword(req.body.userPwd)) {
-  //   error_msg.password = "Please enter a valid password";
-  // }
-  // if (!checkEmail(req.body.userEmail)) {
-  //   // res.send({ inputstatus: "fail", message: "Please enter a valid email" });
-  //   error_msg.email = "Please enter a valid email";
-  // }
-  // if (
-  //   error_msg.username ||
-  //   error_msg.password ||
-  //   error_msg.email
-  //   // error_msg.duplicate
-  // ) {
-  //   return res.send(error_msg);
-  // } else {
-  usermodel.createPlan(req.body, async (err, data) => {
-    if (err) {
-      // res.send({ duplicate: true });
-      // error_msg.duplicate = "User Exists";
-      // return res.send(error_msg);
-      // console.log(error_msg);
+  var error_msg = {
+    mandatory: false,
+    duplicate: false,
+    create: false
+  };
+  if (!req.body.planMVPName || !req.body.planStart || !req.body.planEnd) {
+    error_msg.mandatory = "Fill in all mandatory fields";
+    return res.send(error_msg);
+  } else {
+    usermodel.createPlan(req.body, async (err, data) => {
+      if (err) {
+        // res.send({ duplicate: true });
+        error_msg.duplicate = "Plan Exists";
+        return res.send(error_msg);
 
-      console.log("error boo");
-    } else {
-      // error_msg.create = "User Created";
-      console.log("plan created yay");
-      // res.send(error_msg);
-      res.send(data);
-    }
-  });
-  // }
+        console.log("error boo");
+      } else {
+        error_msg.create = "Plan Created";
+        console.log("plan created yay");
+        res.send(error_msg);
+        // res.send(data);
+      }
+    });
+  }
 };
 
 // View/Read Plans
@@ -601,54 +577,89 @@ const viewPlanColor = (req, res) => {
     if (err) {
       res.send(data);
     } else {
-      res.send(data.planColor);
+      res.send(data[0].planColor);
     }
   });
 };
 
-// Create Task
+// Create Task - A2
 const createTask = async (req, res) => {
-  // var error_msg = {
-  //   username: false,
-  //   password: false,
-  //   email: false,
-  //   duplicate: false,
-  //   create: false
-  // };
-  // if (!checkSpacing(req.body.userName) || !checkUserName(req.body.userName)) {
-  //   error_msg.username = "Please enter a valid username";
-  // }
-  // if (!checkPassword(req.body.userPwd)) {
-  //   error_msg.password = "Please enter a valid password";
-  // }
-  // if (!checkEmail(req.body.userEmail)) {
-  //   // res.send({ inputstatus: "fail", message: "Please enter a valid email" });
-  //   error_msg.email = "Please enter a valid email";
-  // }
-  // if (
-  //   error_msg.username ||
-  //   error_msg.password ||
-  //   error_msg.email
-  //   // error_msg.duplicate
-  // ) {
-  //   return res.send(error_msg);
-  // } else {
-  usermodel.createTask(req.body, async (err, data) => {
-    if (err) {
-      // res.send({ duplicate: true });
-      // error_msg.duplicate = "User Exists";
-      // return res.send(error_msg);
-      // console.log(error_msg);
+  console.log(req.body);
+  var error_msg = {
+    mandatory: false,
+    duplicate: false,
+    create: false
+  };
+  if (!req.body.taskName) {
+    error_msg.mandatory = "Fill in all mandatory fields";
+    return res.send(error_msg);
+  } else {
+    usermodel.createTask(req.body, async (err, data) => {
+      // console.log("askdoap");
+      // console.log(req.body);
+      if (err) {
+        // res.send({ duplicate: true });
+        error_msg.duplicate = "Task Exists";
+        console.log(err);
+        return res.send(error_msg);
+        // console.log(error_msg);
 
-      console.log("error boo");
-    } else {
-      // error_msg.create = "User Created";
-      console.log("task created yay");
-      res.send(data);
-      // res.send(error_msg);
-    }
-  });
-  // }
+        console.log("error boo");
+      } else {
+        error_msg.create = "Task Created";
+        console.log("task created yay");
+        // res.send(data);
+        res.send(error_msg);
+      }
+    });
+    // }
+  }
+};
+
+// Create Task 3
+const createTaskA3 = async (req, res) => {
+  console.log(req.body);
+  var error_msg = {
+    mandatory: false,
+    duplicate: false,
+    create: false
+  };
+  if (!req.body.taskName) {
+    error_msg.mandatory = "Fill in all mandatory fields";
+    return res.send(error_msg);
+  } else {
+    usermodel.createTaskA3(req.body, async (err, data) => {
+      // console.log("askdoap");
+      // console.log(req.body);
+      if (err) {
+        // res.send({ duplicate: true });
+        error_msg.duplicate = "Task Exists";
+        console.log(err);
+        return res.send(error_msg);
+        // console.log(error_msg);
+
+        console.log("error boo");
+      } else {
+        error_msg.create = "Task Created";
+        console.log("task created yay");
+        // res.send(data);
+        res.send(error_msg);
+
+        const updateInfo = {
+          applicationRnumUpdate: req.body.applicationRnum,
+          applicationAcronym: req.body.applicationAcronym
+        };
+        usermodel.updateAppRNUMA3(updateInfo, (err, data) => {
+          if (err) {
+            console.log(err);
+          } else {
+            console.log("YESSSS");
+          }
+        });
+      }
+    });
+    // }
+  }
 };
 
 // View/Read Tasks
@@ -708,117 +719,139 @@ const updateTaskNotes = async (req, res) => {
 //Update Task
 const updateTask = async (req, res) => {
   console.log(req.body);
-  // let taskname = req.body.taskName;
+  console.log(req.body.taskPlanColor);
   let tasknotes = req.body.taskNotes;
   let taskplanmvpname = req.body.taskPlanMVPName;
-  // let taskappacronym = req.body.taskAppAcronym;
 
   if (!taskplanmvpname && !tasknotes) {
     res.send({ isUpdatePlan: "fail", isUpdateNotes: "fail" });
-  }
-  // else if (!taskplanmvpname && tasknotes) {
-  //   usermodel.updateTaskNotes(req.body, (err, data) => {
-  //     // console.log(req.body);
-  //     if (err) {
-  //       res.send(err, {
-  //         inputstatus: "fail",
-  //         message: "Failed to update notes"
-  //       });
-  //     } else {
-  //       res.send({ isUpdatePlan: "fail", isUpdateNotes: "success" });
-  //     }
-  //   });
-  // }
-  else if (!taskplanmvpname && tasknotes) {
+  } else if (!taskplanmvpname && tasknotes) {
     usermodel.updateTaskNotes(req.body, (err, data) => {
-      // console.log(req.body);
-
       if (err) {
         res.send(err, {
           inputstatus: "fail",
           message: "Failed to update notes"
         });
-      }
-      // else {
-      //   usermodel.appendAuditNotes(req, (err, data) => {
-      //     if (err) {
-      //       res.send(err, {
-      //         inputstatus: "fail",
-      //         message: "Failed to update notes"
-      //       });
-      //     }
-      else {
+      } else {
         res.send({ isUpdatePlan: "fail", isUpdateNotes: "success" });
       }
-      //   });
-      // }
     });
   } else if (taskplanmvpname && !tasknotes) {
-    usermodel.updateTaskPlan(req.body, (err, data) => {
-      if (err) {
-        res.send(err, {
-          inputstatus: "fail",
-          message: "Failed to update plan"
-        });
-      } else {
-        res.send({ isUpdatePlan: "success", isUpdateNotes: "fail" });
-      }
-    });
+    res.send({ isUpdatePlan: "success", isUpdateNotes: "fail" });
   } else {
-    // console.log(req.body);
-    usermodel.updateTaskPlanNotes(req.body, (err, data) => {
-      let body = req.body;
-      if (err) {
-        res.send(err, {
-          inputstatus: "fail",
-          message: "Failed to update task"
-        });
-      }
-      // else {
-      //   usermodel.appendAuditNotes(body, (err, data) => {
-      //     console.log(body);
-      //     if (err) {
-      //       res.send(err, {
-      //         inputstatus: "fail",
-      //         message: "Failed to update notes"
-      //       });
-      //     }
-      else {
-        res.send({ isUpdatePlan: "success yay", isUpdateNotes: "success" });
-      }
-      //   });
-      // }
-      // else {
-      //   res.send({ isUpdatePlan: "success", isUpdateNotes: "success" });
-      // }
-    });
+    // If taskPlanColor is undefined
+    if (taskplanmvpname === "none") {
+      usermodel.updateTaskPlanNotes(req.body, (err, data) => {
+        if (err) {
+          res.send(err, {
+            inputstatus: "fail",
+            message: "Failed to update task"
+          });
+        } else {
+          usermodel.updateTaskPlan(req.body, (err, data) => {
+            if (err) {
+              res.send(err, {
+                inputstatus: "fail",
+                message: "Failed to update plan"
+              });
+            } else {
+              res.send({ isUpdatePlan: "success", isUpdateNotes: "success" });
+            }
+          });
+        }
+      });
+    } else {
+      usermodel.viewPlanColor(req.body, (err, data) => {
+        if (err) {
+          console.log(err);
+        } else {
+          let taskPlanColorr = data[0].planColor;
+
+          const updateinfo = {
+            taskPlanColor: taskPlanColorr,
+            taskPlanMVPName: req.body.taskPlanMVPName,
+            taskOwner: req.body.taskOwner,
+            taskAuditNotes: req.body.taskAuditNotes,
+            taskDesc: req.body.taskDesc,
+            taskId: req.body.taskId,
+            taskNotes: req.body.taskNotes
+          };
+          usermodel.updateTaskPlanNotes(updateinfo, (err, data) => {
+            if (err) {
+              res.send(err, {
+                inputstatus: "fail",
+                message: "Failed to update task"
+              });
+            } else {
+              usermodel.updateTaskPlan(updateinfo, (err, data) => {
+                if (err) {
+                  res.send(err, {
+                    inputstatus: "fail",
+                    message: "Failed to update plan"
+                  });
+                } else {
+                  res.send({
+                    isUpdatePlan: "success",
+                    isUpdateNotes: "success"
+                  });
+                }
+              });
+            }
+          });
+        }
+      });
+    }
+
+    // usermodel.updateTaskPlanNotes(req.body, (err, data) => {
+    //   let body = req.body;
+    //   if (err) {
+    //     res.send(err, {
+    //       inputstatus: "fail",
+    //       message: "Failed to update task"
+    //     });
+    //   } else {
+    //     usermodel.updateTaskPlan(req.body, (err, data) => {
+    //       if (err) {
+    //         res.send(err, {
+    //           inputstatus: "fail",
+    //           message: "Failed to update plan"
+    //         });
+    //       } else {
+    //         res.send({ isUpdatePlan: "success", isUpdateNotes: "success" });
+    //       }
+    //     });
+    //   }
+    // });
   }
 };
 
 // Update State
-const updateTaskState = async (req, res) => {
-  console.log(req.body);
-  usermodel.updateTaskState(req.body, (err, data) => {
-    if (err) {
-      res.send(err, {
-        isUpdateState: "fail",
-        message: "Failed to update state"
-      });
-    } else {
-      res.send({ isUpdateState: "success", message: "State Updated" });
-    }
-  });
-};
+// const updateTaskState = async (req, res) => {
+//   console.log(req.body);
+//   usermodel.updateTaskState(req.body, (err, data) => {
+//     if (err) {
+//       res.send(err, {
+//         isUpdateState: "fail",
+//         message: "Failed to update state"
+//       });
+//     } else {
+//       res.send({ isUpdateState: "success", message: "State Updated" });
+//     }
+//   });
+// };
 
 // Update Audit log - promote /demote
 const updateTaskStateNotes = async (req, res) => {
   console.log(req.body);
   usermodel.updateTaskStateNotes(req.body, (err, data) => {
     if (err) {
-      res.send(err, {
-        isUpdateStateNotes: "fail",
-        message: "Failed to update promote/demote"
-      });
+      // res.send(err, {
+      //   isUpdateStateNotes: "fail",
+      //   message: "Failed to update promote/demote"
+      // });
+      // res.send(err, null);
+      // res.status(err).send(null);
+      console.log("errr");
     } else {
       res.send({
         isUpdateStateNotes: "success",
@@ -839,6 +872,31 @@ const checkGroup = async (req, res) => {
       res.send(err, { message: err.sqlMessage });
     } else {
       res.send(inputgroup);
+    }
+  });
+};
+
+// Check group
+const checkGroupFunction = ({ userName, groupName }, res) => {
+  usermodel.checkGroupFunction(res.req.body, (err, data) => {
+    let userName = res.req.body.userName;
+    let groupName = res.req.body.groupName;
+    // console.log(res.req.body);
+    if (err) {
+      res.send(err, { message: err.sqlMessage });
+    } else {
+      res.send(data);
+    }
+  });
+};
+
+// Check app permits
+const checkAppPermits = (req, res) => {
+  usermodel.checkAppPermits(req.body, (err, data) => {
+    if (err) {
+      res.send(err, { message: err.sqlMessage });
+    } else {
+      res.send(data);
     }
   });
 };
@@ -866,7 +924,10 @@ module.exports = {
   updateTaskPlan,
   updateTaskNotes,
   updateTask,
-  updateTaskState,
+  // updateTaskState,
   updateTaskStateNotes,
-  checkGroup
+  checkGroup,
+  checkAppPermits,
+  checkGroupFunction,
+  createTaskA3
 };

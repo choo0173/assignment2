@@ -19,8 +19,10 @@ function ViewPlan(props) {
             fontSize: "0.8em",
             padding: "0.3em",
             borderRadius: "0.2rem",
+
             backgroundColor: plan.planColor,
-            color: "#FFF"
+            // backgroundColor: "#E0E0DF",
+            color: "black"
           };
 
           return (

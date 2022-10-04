@@ -19,13 +19,20 @@ function KanbanBoard() {
   const [showTaskList, setTaskList] = useState([]);
   const [showPlanList, setPlanList] = useState([]);
   const [submit, setSubmit] = useState(false); // Set useState each time handleSave event Handler is fired for useEffect Dependency
-  // const [addTask, setAddTask] = useState(false); // Set useState each time handleSave event Handler is fired for useEffect Dependency
   const [addPlan, setAddPlan] = useState(false); // Set useState each time handleSave event Handler is fired for useEffect Dependency
-  // const [updateTaskState, setTaskUpdateState] = useState(false); // Set useState each time handleSave event Handler is fired for useEffect Dependency
-  // const [updateTaskUpdateChangesState, setTaskUpdateChangesState] =
-  useState(false); // Set useState each time handleSave event Handler is fired for useEffect Dependency
-  let username = sessionStorage.getItem("username");
+  // Check App Permits
+  // const [showapplicationPOpen, setapplicationPOpen] = useState("");
+  // const [applicationPCreate, setapplicationPCreate] = useState("");
+  // const [applicationPTodo, setapplicationPTodo] = useState("");
+  // const [applicationPDoing, setapplicationPDoing] = useState("");
+  // const [applicationPDone, setapplicationPDone] = useState("");
+  const [showIsPOpen, setIsPOpen] = useState("");
+  const [showIsPCreate, setIsPCreate] = useState("");
+  const [showIsPTodo, setIsPTodo] = useState("");
+  const [showIsPDoing, setIsPDoing] = useState("");
+  const [showIsPDone, setIsPDone] = useState("");
 
+  let username = sessionStorage.getItem("username");
   const { appName } = useParams();
   const checkGroupData = {
     userName: username,
@@ -42,9 +49,65 @@ function KanbanBoard() {
   };
 
   useEffect(() => {
-    userService.checkGroup(checkGroupData).then((response) => {
-      setGroupAdmin(response);
-    });
+    const getUserRights = async () => {
+      userService.checkGroup(checkGroupData).then((response) => {
+        setGroupAdmin(response);
+      });
+      const permits = await fetchAppPermits();
+      userService
+        .checkGroupFunction({
+          userName: username,
+          groupName: permits.applicationPOpen
+        })
+        .then((response) => {
+          // console.log(applicationPOpen);
+          console.log("permit open", response.result);
+          setIsPOpen(response.result);
+        });
+
+      userService
+        // .checkGroupFunction(username, applicationPCreate)
+        .checkGroupFunction({
+          userName: username,
+          groupName: permits.applicationPCreate
+        })
+        .then((response) => {
+          console.log("permit create", response.result);
+          setIsPCreate(response.result);
+        });
+
+      userService
+        // .checkGroupFunction(username, applicationPTodo)
+        .checkGroupFunction({
+          userName: username,
+          groupName: permits.applicationPTodo
+        })
+        .then((response) => {
+          console.log("permit todo", response.result);
+          setIsPTodo(response.result);
+        });
+      userService
+        // .checkGroupFunction(username, applicationPDoing)
+        .checkGroupFunction({
+          userName: username,
+          groupName: permits.applicationPDoing
+        })
+        .then((response) => {
+          console.log("permit doing", response.result);
+          setIsPDoing(response.result);
+        });
+      userService
+        // .checkGroupFunction(username, applicationPDone)
+        .checkGroupFunction({
+          userName: username,
+          groupName: permits.applicationPDone
+        })
+        .then((response) => {
+          console.log("permit done", response.result);
+          setIsPDone(response.result);
+        });
+    };
+    getUserRights();
   }, []);
 
   // // Display Tasks and Plans
@@ -52,21 +115,6 @@ function KanbanBoard() {
     fetchPlans();
     setAddPlan(false);
   }, [addPlan]);
-
-  // Fetch tasks
-  // useEffect(() => {
-  //   fetchTasks();
-  // }, [addTask]);
-
-  // useEffect(() => {
-  //   fetchTasks();
-  //   setTaskUpdateState(false);
-  // }, [updateTaskState]);
-
-  // useEffect(() => {
-  //   fetchTasks();
-  //   setTaskUpdateChangesState(false);
-  // }, [updateTaskUpdateChangesState]);
 
   useEffect(() => {
     setSubmit(false);
@@ -87,13 +135,20 @@ function KanbanBoard() {
   // API call for fetching plans
   const fetchPlans = async () => {
     userService.viewPlans(planInfo).then((response) => {
-      console.log(response);
+      // console.log(response);
       setPlanList(
         response.map((plan) => {
           return plan;
         })
       );
     });
+  };
+
+  // API call for fetching app permits
+  const fetchAppPermits = async () => {
+    const data = await userService.checkAppPermits(appInfo);
+
+    return data.result;
   };
 
   const handleClosePlanModal = () => {
@@ -113,6 +168,25 @@ function KanbanBoard() {
     // setGroups("");
   };
 
+  // const createButton = () => {
+  //   return (
+  //     <>
+  //       <Button
+  //         className="btnfont btn-success "
+  //         onClick={() => setShowAddPlanModal(true)}
+  //       >
+  //         Create Plan +
+  //       </Button>
+  //       <AddPlanModal
+  //         show={showAddPlanModal}
+  //         setAddPlan={setAddPlan}
+  //         // close={() => setShowAddPlanModal(false)}
+  //         close={handleClosePlanModal}
+  //       />
+  //     </>
+  //   );
+  // };
+
   return (
     <>
       {/* Navbad */}
@@ -126,19 +200,25 @@ function KanbanBoard() {
             <h5 className="px-4 color3">{appName}</h5>
           </div>
           <div className="col-1">
-            <Button
-              className="btnfont btn-success "
-              onClick={() => setShowAddPlanModal(true)}
-            >
-              Create Plan +
-            </Button>
-            <AddPlanModal
-              show={showAddPlanModal}
-              setAddPlan={setAddPlan}
-              // close={() => setShowAddPlanModal(false)}
+            {showIsPOpen === true ? (
+              <>
+                <Button
+                  className="btnfont btn-success "
+                  onClick={() => setShowAddPlanModal(true)}
+                >
+                  Create Plan +
+                </Button>
+                <AddPlanModal
+                  show={showAddPlanModal}
+                  setAddPlan={setAddPlan}
+                  // close={() => setShowAddPlanModal(false)}
 
-              close={handleClosePlanModal}
-            />
+                  close={handleClosePlanModal}
+                />
+              </>
+            ) : (
+              <></>
+            )}
           </div>
         </div>
         {/* Display Plans */}
@@ -152,24 +232,30 @@ function KanbanBoard() {
           <div className="row">
             <div className="col">
               Open{" "}
-              <Button
-                title="Create Task"
-                style={{ float: "right" }}
-                variant="light"
-                size="sm"
-                onClick={() => setShowAddTaskModal(true)}
-              >
-                <FontAwesomeIcon icon="fa-solid fa-plus" />
-              </Button>
-              <AddTaskModal
-                show={showAddTaskModal}
-                // setAddTask={setAddTask}
-                setSubmit={setSubmit}
-                // close={() => setShowAddTaskModal(false)}
-                close={handleCloseTaskModal}
-                taskList={showTaskList}
-                showPlanList={showPlanList}
-              />
+              {showIsPCreate === true ? (
+                <>
+                  <Button
+                    title="Create Task"
+                    style={{ float: "right" }}
+                    variant="light"
+                    size="sm"
+                    onClick={() => setShowAddTaskModal(true)}
+                  >
+                    <FontAwesomeIcon icon="fa-solid fa-plus" />
+                  </Button>
+                  <AddTaskModal
+                    show={showAddTaskModal}
+                    // setAddTask={setAddTask}
+                    setSubmit={setSubmit}
+                    // close={() => setShowAddTaskModal(false)}
+                    close={handleCloseTaskModal}
+                    taskList={showTaskList}
+                    showPlanList={showPlanList}
+                  />
+                </>
+              ) : (
+                <></>
+              )}
             </div>
             <div className="col">To Do</div>
             <div className="col">Doing</div>
@@ -202,14 +288,12 @@ function KanbanBoard() {
                 .filter((task) => task.taskState === "open")
                 .map((task, index) => (
                   <TaskCard
-                    key={task.taskName}
+                    key={task.taskId}
                     task={task}
                     showPlanList={showPlanList}
                     setSubmit={setSubmit}
                     shift={handleShiftCard}
-
-                    // setTaskUpdateState={setTaskUpdateState}
-                    // setTaskUpdateChangesState={setTaskUpdateChangesState}
+                    showIsPOpenRights={showIsPOpen}
                   />
                 ))}
             </div>
@@ -219,14 +303,12 @@ function KanbanBoard() {
                 .filter((task) => task.taskState === "todo")
                 .map((task, index) => (
                   <TaskCard
-                    key={task.taskName}
+                    key={task.taskId}
                     task={task}
                     setSubmit={setSubmit}
-                    // setTaskUpdateState={setTaskUpdateState}
                     showPlanList={showPlanList}
                     shift={handleShiftCard}
-
-                    // setTaskUpdateChangesState={setTaskUpdateChangesState}
+                    showIsPTodoRights={showIsPTodo}
                   />
                 ))}
             </div>
@@ -236,14 +318,12 @@ function KanbanBoard() {
                 .filter((task) => task.taskState === "doing")
                 .map((task, index) => (
                   <TaskCard
-                    key={task.taskName}
+                    key={task.taskId}
                     task={task}
-                    // setTaskUpdateState={setTaskUpdateState}
                     showPlanList={showPlanList}
                     setSubmit={setSubmit}
                     shift={handleShiftCard}
-
-                    // setTaskUpdateChangesState={setTaskUpdateChangesState}
+                    showIsPDoingRights={showIsPDoing}
                   />
                 ))}
             </div>
@@ -253,14 +333,12 @@ function KanbanBoard() {
                 .filter((task) => task.taskState === "done")
                 .map((task, index) => (
                   <TaskCard
-                    key={task.taskName}
+                    key={task.taskId}
                     task={task}
-                    // setTaskUpdateState={setTaskUpdateState}
                     showPlanList={showPlanList}
                     setSubmit={setSubmit}
                     shift={handleShiftCard}
-
-                    // setTaskUpdateChangesState={setTaskUpdateChangesState}
+                    showIsPDoneRights={showIsPDone}
                   />
                 ))}
             </div>
@@ -270,14 +348,11 @@ function KanbanBoard() {
                 .filter((task) => task.taskState === "close")
                 .map((task, index) => (
                   <TaskCard
-                    key={task.taskName}
+                    key={task.taskId}
                     task={task}
-                    // setTaskUpdateState={setTaskUpdateState}
                     showPlanList={showPlanList}
                     setSubmit={setSubmit}
                     shift={handleShiftCard}
-
-                    // setTaskUpdateChangesState={setTaskUpdateChangesState}
                   />
                 ))}
             </div>

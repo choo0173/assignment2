@@ -53,12 +53,25 @@ function GridCard(props) {
             id={props.app.applicationAcronym}
             appDetails={props.app}
             setUpdateSave={props.setUpdateSave}
+            isAdminPermit={props.isAdminPermit}
+            isProjectLeadPermit={props.isProjectLeadPermit}
           />
         </Card.Title>
 
         <Card.Text style={styletextObj}>{props.app.applicationDesc}</Card.Text>
         <Link to={`/kanbanboard/${props.app.applicationAcronym}`}>
-          <Button variant="primary" style={{ float: "right" }}>
+          <Button
+            variant="primary"
+            style={{ float: "right" }}
+            // onClick={
+            //   (() =>
+            //     setTimeout(
+            //       // () => `/kanbanboard/${props.app.applicationAcronym}`
+            //       // () => this.Link
+            //     ),
+            //   300)
+            // }
+          >
             View More <FontAwesomeIcon icon="fa-solid fa-chevron-right" />
           </Button>
         </Link>

@@ -99,6 +99,11 @@ class UserService {
       return res.data;
     });
   }
+  createTaskA3(taskinfo) {
+    return axios.post(API_URL + "createTaskA3", taskinfo).then((res) => {
+      return res.data;
+    });
+  }
 
   viewTasks(taskInfo) {
     return axios.post(API_URL + "viewTasks", taskInfo).then((res) => {
@@ -158,6 +163,26 @@ class UserService {
 
   checkGroup(data) {
     return axios.post(API_URL + "checkGroup", data).then((res) => {
+      return res.data;
+    });
+  }
+
+  checkAppPermits(data) {
+    return axios.post(API_URL + "checkAppPermits", data).then((res) => {
+      return res.data;
+    });
+  }
+
+  checkGroupFunction(userName, groupName) {
+    return axios
+      .post(API_URL + "checkGroupFunction", userName, groupName)
+      .then((res) => {
+        return res.data;
+      });
+  }
+  sendEmail(email) {
+    console.log("email", email);
+    return axios.post(API_URL + "allUserEmail", email).then((res) => {
       return res.data;
     });
   }

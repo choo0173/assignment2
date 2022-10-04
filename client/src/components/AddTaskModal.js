@@ -7,10 +7,9 @@ import Button from "react-bootstrap/esm/Button";
 import Row from "react-bootstrap/esm/Row";
 import Col from "react-bootstrap/esm/Col";
 import moment from "moment";
+import { toast } from "react-toastify";
 
 function AddTaskModal(props) {
-  console.log("yyoooozz props");
-  console.log(props);
   const [showtaskName, settaskName] = useState("");
   const [showtaskDesc, settaskDesc] = useState("");
   const [showtaskNotes, settaskNotes] = useState("");
@@ -20,14 +19,8 @@ function AddTaskModal(props) {
   const [showTaskCount, setTaskCount] = useState("");
   const [showAppDetails, setAppDetails] = useState("");
   const [showAppRNUM, setAppRNUM] = useState("");
-  const [showTaskRnum, setTaskRNUM] = useState(showAppRNUM + showTaskCount);
+  // const [showTaskRnum, setTaskRNUM] = useState(showAppRNUM + showTaskCount);
   const [addTask, setAddTask] = useState(false);
-
-  // const [showtaskAppAcronym, settaskAppAcronym] = useState("");
-  // const [showtaskState, settaskState] = useState("");
-  // // const [showtaskCreator, settaskCreator] = useState("");
-  // const [showtaskOwner, settaskOwner] = useState("");
-  // const [showtaskCreate, settaskCreate] = useState("");
   const { appName } = useParams();
   let username = sessionStorage.getItem("username");
   const formatDate = moment().format("YYYY-MM-DD HH:mm:ss");
@@ -38,10 +31,10 @@ function AddTaskModal(props) {
   const taskInfo = {
     taskAppAcronym: appName
   };
-  const planColor = {
-    planAppAcronym: appName,
-    planMVPName: showtaskPlanMVPName
-  };
+  // const planColor = {
+  //   planAppAcronym: appName,
+  //   planMVPName: showtaskPlanMVPName
+  // };
 
   // Display Plans
   useEffect(() => {
@@ -52,9 +45,6 @@ function AddTaskModal(props) {
 
   const fetchTaskCount = () => {
     userService.countTasksbyApp(taskInfo).then((response) => {
-      // console.log("====----====");
-      // console.log(response.result);
-      // console.log("====++++====");
       setTaskCount(response.result);
     });
   };
@@ -62,68 +52,113 @@ function AddTaskModal(props) {
   // API call for fetching Apps
   const fetchOneApps = () => {
     userService.viewOneApps(appInfo).then((response) => {
-      // console.log("thisss is one app data");
-      // console.log(response[0].applicationRnum);
-      // console.log("00000000000000000000");
       setAppDetails(response);
       setAppRNUM(response[0].applicationRnum);
     });
   };
 
-  function handleCreateTask(e) {
+  // const fetchPlanColor = async (info) => {
+  //   const data = await userService.viewPlanColor(info);
+  //   return data.result;
+  // };
+
+  async function handleCreateTask(e) {
     e.preventDefault();
 
     const auditlog = formatDate + " " + username + " created app";
-    console.log("showTaskCount");
-    console.log(showTaskCount);
-    const taskRnumCount = showAppRNUM + showTaskCount + 1;
+
+    const taskRnumCount = showAppRNUM + showTaskCount;
     const taskRnum = appName + "_" + taskRnumCount;
+    // const taskRnum = appName + "_" + showAppRNUM;
+
+    // const planColor = {
+    //   planAppAcronym: appName,
+    //   planMVPName: showtaskPlanMVPName
+    // };
+
+    // let plancolor = await userService.viewPlanColor(planColor);
+
+    // console.log(plancolor);
 
     const taskInfo = {
+      applicationAcronym: appName,
       taskName: showtaskName,
       taskDesc: showtaskDesc,
-      // taskNotes: showtaskNotes,
-      taskId: taskRnum,
-      taskPlanMVPName: showtaskPlanMVPName,
+      taskNotes: showtaskNotes,
+      // taskId: taskRnum,
+      // taskPlanMVPName: showtaskPlanMVPName,
+      taskPlanMVPName: "none",
       taskAppAcronym: appName,
       taskState: "open",
       taskCreator: username,
       taskOwner: username,
       taskCreate: formatDate,
-      taskPlanColor: showtaskPlanColor,
+      // taskPlanColor: "none",
       taskAuditNotes: auditlog
     };
 
-    userService.createTask(taskInfo).then((response) => {
-      // notify(response.isGroup, response.bmessage);
-      // console.log(response.result);
-      if (response.result == true) {
+    // Assignment 2 - dont delete
+    // const taskInfo = {
+    //   taskName: showtaskName,
+    //   taskDesc: showtaskDesc,
+    //   // taskNotes: showtaskNotes,
+    //   taskId: taskRnum,
+    //   // taskPlanMVPName: showtaskPlanMVPName,
+    //   taskPlanMVPName: "none",
+    //   taskAppAcronym: appName,
+    //   taskState: "open",
+    //   taskCreator: username,
+    //   taskOwner: username,
+    //   taskCreate: formatDate,
+    //   taskPlanColor: "none",
+    //   taskAuditNotes: auditlog
+    // };
+
+    userService.createTaskA3(taskInfo).then((response) => {
+      console.log(taskInfo);
+      notify(response);
+      if (response.create === "Task Created") {
         // setGroups("");
         settaskName("");
         settaskDesc("");
         settaskNotes("");
-        props.setAddTask(true);
+        settaskPlanMVPName("");
         setAddTask(true);
         console.log("done");
       } else {
         console.log("Stop");
       }
     });
+
+    // Assignment 2 - dont delete
+    // userService.createTask(taskInfo).then((response) => {
+    //   console.log(taskInfo);
+    //   notify(response);
+    //   if (response.create === "Task Created") {
+    //     // setGroups("");
+    //     settaskName("");
+    //     settaskDesc("");
+    //     settaskNotes("");
+    //     settaskPlanMVPName("");
+    //     setAddTask(true);
+    //     console.log("done");
+    //   } else {
+    //     console.log("Stop");
+    //   }
+    // });
   }
 
-  function handlePlanColor(e) {
-    settaskPlanMVPName(e.target.value);
-
-    userService.viewPlanColor(planColor).then((response) => {
-      // notify(response.isGroup, response.bmessage);
-      // console.log(response);
-      if (!response) {
-        settaskPlanColor(response);
-      } else {
-        console.log("Stop");
-      }
-    });
-  }
+  const notify = (error_msg) => {
+    if (error_msg.duplicate != false) {
+      toast.error(error_msg.duplicate, {});
+    }
+    if (error_msg.create != false) {
+      toast.success(error_msg.create, {});
+    }
+    if (error_msg.mandatory != false) {
+      toast.warning(error_msg.mandatory, {});
+    }
+  };
 
   return (
     <>
@@ -135,7 +170,7 @@ function AddTaskModal(props) {
           <Form>
             <Row className="mb-2">
               <Form.Group as={Col} xs={9}>
-                <Form.Label>Title</Form.Label>
+                <Form.Label>Title *</Form.Label>
                 <Form.Control
                   placeholder="Task Title"
                   onChange={(e) => {
@@ -144,38 +179,42 @@ function AddTaskModal(props) {
                   value={showtaskName}
                 />
               </Form.Group>
-              <Form.Group as={Col}>
-                <Form.Group>
-                  <div>
+              {/* <Form.Group as={Col}> */}
+              {/* <Form.Group> */}
+              {/* <div>
                     <Form.Label>Plan</Form.Label>
-                  </div>
+                  </div> */}
 
-                  <Form.Select
+              {/* <Form.Select
                     className="pt-3 px-5"
                     // onChange={handlePlanColor}
                     onChange={(e) => {
                       settaskPlanMVPName(e.target.value);
-                      // handlePlanColor;
                     }}
-                  >
-                    <option value=" ">Choose a plan</option>
+                  > */}
+              {/* <option value=" ">Choose a plan</option>
                     {props.showPlanList.map((plan) => {
                       return (
-                        <option key={plan.planMVPName} value={plan.planMVPName}>
+                        <option
+                          key={plan.planMVPName}
+                          value={plan.planMVPName}
+                          style={{ background: plan.planColor }}
+                        >
                           {plan.planMVPName}
                         </option>
                       );
-                    })}
-                  </Form.Select>
-                </Form.Group>
-                {/* <Form.Group className="mt-2">
+                    })} */}
+              {/* </Form.Select> */}
+              {/* </Form.Group> */}
+
+              {/* <Form.Group className="mt-2">
                   <Form.Label className="mx-1">Rnumber</Form.Label>
                   <Form.Select className="px-1 mx-2" defaultValue="Choose...">
                     <option>Choose...</option>
                     <option>...</option>
                   </Form.Select>
                 </Form.Group> */}
-              </Form.Group>
+              {/* </Form.Group> */}
             </Row>
 
             <Form.Group className="mb-3">

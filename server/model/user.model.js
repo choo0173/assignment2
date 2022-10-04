@@ -1,5 +1,6 @@
 // const bcrypt = require("bcrypt");
 const sql = require("../config/db.config");
+const nodemailer = require("nodemailer");
 
 // =============== User ===============
 // Create User
@@ -187,8 +188,26 @@ const viewUserGroupname = (req, response) => {
 // Create Application
 const createApp = (req, response) => {
   sql.query(
-    `INSERT INTO application VALUES ('${req.applicationAcronym}','${req.applicationDesc}','${req.applicationRnum}','${req.applicationStart}','${req.applicationEnd}','${req.applicationPOpen}','${req.applicationPCreate}','${req.applicationPTodo}','${req.applicationPDoing}','${req.applicationPDone}')  `,
+    // `INSERT INTO application VALUES ('${req.applicationAcronym}',
+    // '${req.applicationDesc}','${req.applicationRnum}','${req.applicationStart}',
+    // '${req.applicationEnd}','${req.applicationPCreate}','${req.applicationPOpen}',
+    // '${req.applicationPTodo}','${req.applicationPDoing}','${req.applicationPDone}')  `,
     // `INSERT INTO application (applicationAcronym,applicationRnum )VALUES ('${req.applicationAcronym}','${req.applicationrRnum}')  `,
+
+    `INSERT INTO application 
+    VALUES (?,?,?,?,?,?,?,?,?,?) `,
+    [
+      req.applicationAcronym,
+      req.applicationDesc,
+      req.applicationRnum,
+      req.applicationStart,
+      req.applicationEnd,
+      req.applicationPCreate,
+      req.applicationPOpen,
+      req.applicationPTodo,
+      req.applicationPDoing,
+      req.applicationPDone
+    ],
     (err, res) => {
       if (err) {
         console.log(err);
@@ -239,10 +258,22 @@ const viewOneApps = (req, response) => {
 const updateApp = (req, response) => {
   console.log(req);
   sql.query(
-    `UPDATE application SET applicationDesc= '${req.applicationDesc}' , 
-    applicationStart= '${req.applicationStart}', applicationEnd= '${req.applicationEnd}', applicationPOpen='${req.applicationPOpen}',
-    applicationPCreate='${req.applicationPCreate}', applicationPTodo='${req.applicationPTodo}',applicationPDoing='${req.applicationPDoing}',applicationPDone='${req.applicationPDone}'
-    WHERE applicationAcronym='${req.applicationAcronym}'`,
+    `UPDATE application SET applicationDesc= ? , 
+    applicationStart= ?, applicationEnd= ?, 
+    applicationPCreate=?,applicationPOpen=?, applicationPTodo=?,applicationPDoing=?,applicationPDone=?
+    WHERE applicationAcronym=?`,
+    [
+      req.applicationDesc,
+      req.applicationStart,
+      req.applicationEnd,
+      req.applicationPCreate,
+      req.applicationPOpen,
+      req.applicationPTodo,
+      req.applicationPDoing,
+      req.applicationPDone,
+      req.applicationAcronym
+    ],
+
     (err, result) => {
       if (err) {
         // console.log(err);
@@ -338,8 +369,10 @@ const viewPlans = (req, response) => {
 // View Plan Colour
 const viewPlanColor = (req, response) => {
   sql.query(
-    `SELECT planColor FROM plan WHERE planAppAcronym= '${req.planAppAcronym}' AND planMVPName= '${req.planMVPName}'`,
+    // `SELECT planColor FROM plan WHERE planAppAcronym= '${req.planAppAcronym}' AND planMVPName= '${req.planMVPName}'`,
+    `SELECT planColor FROM plan WHERE planAppAcronym= '${req.taskAppAcronym}' AND planMVPName= '${req.taskPlanMVPName}'`,
     (err, result) => {
+      console.log(result);
       if (err) {
         response(err, null);
       } else {
@@ -356,11 +389,41 @@ const viewPlanColor = (req, response) => {
 // Create Task
 const createTask = (req, response) => {
   sql.query(
-    `INSERT INTO task (taskName,taskDesc,taskId,taskPlanMVPName,taskAppAcronym,taskState,taskCreator,taskOwner,taskCreate, taskAuditNotes)
-    VALUES ('${req.taskName}','${req.taskDesc}','${req.taskId}',
-    (SELECT planMVPName FROM plan WHERE planMVPName= '${req.taskPlanMVPName}'),
-    (SELECT applicationAcronym FROM application WHERE applicationAcronym= '${req.taskAppAcronym}'),
-    '${req.taskState}','${req.taskCreator}','${req.taskOwner}','${req.taskCreate}','${req.taskAuditNotes}') `,
+    // `INSERT INTO task (taskName,taskDesc,taskId,taskPlanMVPName,taskAppAcronym,taskState,taskCreator,taskOwner,taskCreate, taskAuditNotes)
+    // VALUES ('${req.taskName}','${req.taskDesc}','${req.taskId}',
+    // (SELECT planMVPName FROM plan WHERE planMVPName= '${req.taskPlanMVPName}'),
+    // (SELECT applicationAcronym FROM application WHERE applicationAcronym= '${req.taskAppAcronym}'),
+    // '${req.taskState}','${req.taskCreator}','${req.taskOwner}','${req.taskCreate}','${req.taskAuditNotes}') `,
+    //Works
+    // `INSERT INTO task (taskName,taskDesc,taskId,taskPlanMVPName,taskAppAcronym,taskState,taskCreator,taskOwner,taskCreate, taskAuditNotes)
+    // VALUES (?,?,?,
+    // (SELECT planMVPName FROM plan WHERE planMVPName= ?),
+    // (SELECT applicationAcronym FROM application WHERE applicationAcronym= ?),
+    // ?,?,?,?,?) `,
+
+    // `INSERT INTO task (taskName,taskDesc,taskId,taskPlanMVPName,taskAppAcronym,taskState,taskCreator,taskOwner,taskCreate, taskAuditNotes)
+    // VALUES (?,?,?,
+    // (SELECT DISTINCT planMVPName, planAppAcronym FROM plan WHERE planMVPName= ? AND planAppAcronym= ? ),
+    // ?,?,?,?,?) `,
+
+    `INSERT INTO task (taskName,taskDesc,taskId,taskPlanMVPName,taskAppAcronym,taskState,taskCreator,taskOwner,taskCreate,taskPlanColor, taskAuditNotes)
+    VALUES (?,?,?,?,?,?,
+    ?,?,?,?,?) `,
+
+    [
+      req.taskName,
+      req.taskDesc,
+      req.taskId,
+      req.taskPlanMVPName,
+      req.taskAppAcronym,
+      req.taskState,
+      req.taskCreator,
+      req.taskOwner,
+      req.taskCreate,
+      req.taskPlanColor,
+      req.taskAuditNotes
+    ],
+
     (err, res) => {
       if (err) {
         console.log(err);
@@ -413,8 +476,16 @@ const countTasksbyApp = (req, response) => {
 // Update Task - Plan
 const updateTaskPlan = (req, response) => {
   sql.query(
-    `UPDATE task SET  taskPlanMVPName= '${req.taskPlanMVPName}', taskOwner=  '${req.taskOwner}', taskAuditNotes=  '${req.taskAuditNotes}'
-     WHERE taskName='${req.taskName}' `,
+    `UPDATE task SET taskPlanMVPName=?,taskOwner=?, taskAuditNotes=?,taskDesc=?,taskPlanColor=?
+     WHERE taskId=? `,
+    [
+      req.taskPlanMVPName,
+      req.taskOwner,
+      req.taskAuditNotes,
+      req.taskDesc,
+      req.taskPlanColor,
+      req.taskId
+    ],
     (err, result) => {
       if (err) {
         // console.log(err);
@@ -429,11 +500,19 @@ const updateTaskPlan = (req, response) => {
 // Update Task - Audit Trail (Notes)
 const updateTaskNotes = (req, response) => {
   sql.query(
-    `UPDATE task SET taskNotes= '${req.taskNotes}',taskOwner= '${req.taskOwner}', taskAuditNotes=  '${req.taskAuditNotes}'
-     WHERE taskName='${req.taskName}' `,
+    // `UPDATE task SET taskNotes= '${req.taskNotes}',taskOwner= '${req.taskOwner}', taskAuditNotes=  '${req.taskAuditNotes}',taskDesc= '${req.taskDesc}'
+    //  WHERE taskId='${req.taskId}' `,
+    `UPDATE task SET taskNotes=?,taskOwner=?, taskAuditNotes=?,taskDesc=?
+     WHERE taskId=? `,
+    [
+      req.taskNotes,
+      req.taskOwner,
+      req.taskAuditNotes,
+      req.taskDesc,
+      req.taskId
+    ],
     (err, result) => {
       if (err) {
-        // console.log(err);
         response(err, null);
       } else {
         response(null, result);
@@ -445,11 +524,23 @@ const updateTaskNotes = (req, response) => {
 // Update Task
 const updateTaskPlanNotes = (req, response) => {
   sql.query(
-    `UPDATE task SET taskPlanMVPName= '${req.taskPlanMVPName}' , taskNotes= '${req.taskNotes}', taskAuditNotes=  '${req.taskAuditNotes}',taskOwner=  '${req.taskOwner}'
-     WHERE taskName='${req.taskName}'`,
+    // `UPDATE task SET taskPlanMVPName= '${req.taskPlanMVPName}' , taskNotes= '${req.taskNotes}', taskAuditNotes=  '${req.taskAuditNotes}',taskOwner=  '${req.taskOwner}', taskDesc= '${req.taskDesc}'
+    //  WHERE taskId='${req.taskId}'`,yyc
+    // `UPDATE task SET taskPlanMVPName= '${req.taskPlanMVPName}' , taskNotes= '${req.taskNotes}', taskAuditNotes=  '${req.taskAuditNotes}',taskOwner=  '${req.taskOwner}', taskDesc= '${req.taskDesc}'
+    //  WHERE taskId='${req.taskId}'`,
+    `UPDATE task SET taskPlanMVPName=? ,taskNotes=?, taskAuditNotes=?,taskOwner=?,taskDesc=?,taskPlanColor=?
+     WHERE taskId=? `,
+    [
+      req.taskPlanMVPName,
+      req.taskNotes,
+      req.taskAuditNotes,
+      req.taskOwner,
+      req.taskDesc,
+      req.taskPlanColor,
+      req.taskId
+    ],
     (err, result) => {
       if (err) {
-        // console.log(err);
         response(err, null);
       } else {
         response(null, result);
@@ -459,42 +550,10 @@ const updateTaskPlanNotes = (req, response) => {
 };
 
 // Update State
-const updateTaskState = (req, response) => {
-  sql.query(
-    `UPDATE task SET taskState=  '${req.taskState}'
-     WHERE taskName='${req.taskName}' AND taskAppAcronym='${req.taskAppAcronym}'`,
-    (err, result) => {
-      if (err) {
-        // console.log(err);
-        response(err, null);
-      } else {
-        response(null, result);
-      }
-    }
-  );
-};
-
-//Update Audit notes only - promote demote
-const updateTaskStateNotes = (req, response) => {
-  sql.query(
-    `UPDATE task SET  taskAuditNotes=  '${req.taskAuditNotes}', taskOwner=  '${req.taskOwner}'
-     WHERE taskName='${req.taskName}'`,
-    (err, result) => {
-      if (err) {
-        // console.log(err);
-        response(err, null);
-      } else {
-        response(null, result);
-      }
-    }
-  );
-};
-
-// // Insert into Audit trail
-// const appendAuditNotes = (req, response) => {
+// const updateTaskState = (req, response) => {
 //   sql.query(
-//     `UPDATE task (taskAuditNotes) VALUES   ('${req.taskAuditNotes}' )
-//      WHERE taskName='${req.taskName}' AND taskAppAcronym='${req.taskAppAcronym}'`,
+//     `UPDATE task SET taskState=  '${req.taskState}'
+//      WHERE taskId='${req.taskId}' AND taskAppAcronym='${req.taskAppAcronym}'`,
 //     (err, result) => {
 //       if (err) {
 //         // console.log(err);
@@ -505,6 +564,26 @@ const updateTaskStateNotes = (req, response) => {
 //     }
 //   );
 // };
+
+//Update Audit notes only - promote demote
+const updateTaskStateNotes = (req, response) => {
+  sql.query(
+    // `UPDATE task SET  taskAuditNotes=  '${req.taskAuditNotes}', taskOwner=  '${req.taskOwner}'
+    //  WHERE taskId='${req.taskId}'`,
+
+    `UPDATE task SET  taskAuditNotes=?,taskOwner=?,taskState=?
+     WHERE taskId=? `,
+    [req.taskAuditNotes, req.taskOwner, req.taskState, req.taskId],
+    (err, result) => {
+      if (err) {
+        // console.log(err);
+        response(err, null);
+      } else {
+        response(null, result);
+      }
+    }
+  );
+};
 
 // Checkgroup
 const checkGroup = (req, response) => {
@@ -527,6 +606,172 @@ const checkGroup = (req, response) => {
           // });
           response(null, { message: "Fail", result: null });
         }
+      }
+    }
+  );
+};
+
+// Checkgroup
+const checkGroupFunction = (req, response) => {
+  sql.query(
+    `SELECT * FROM user WHERE userName = '${req.userName}' AND groupName LIKE '%${req.groupName}%'`,
+    (err, res) => {
+      // console.log(res);
+      if (err) {
+        response(err, { result: null });
+      } else {
+        if (res.length != 0) {
+          response(null, { message: "Success", result: true });
+        } else {
+          response(null, { message: "Fail", result: false });
+        }
+      }
+    }
+  );
+};
+
+// Checkgroup
+const checkAppPermits = (req, response) => {
+  sql.query(
+    `SELECT applicationPOpen, applicationPCreate, applicationPTodo, applicationPDoing, applicationPDone FROM application WHERE applicationAcronym = '${req.applicationAcronym}'
+    `,
+    (err, res) => {
+      if (err) {
+        response(err, { result: false });
+      } else {
+        if (res.length != 0) {
+          response(null, { message: "Success", result: res[0] });
+        } else {
+          response(null, { message: "Fail", result: null });
+        }
+      }
+    }
+  );
+};
+
+// Email
+const getAllUserEmail = (req, response) => {
+  sql.query(
+    `SELECT userEmail from user where groupName like '%ProjectLead%'`,
+    (err, result, data) => {
+      if (err) {
+        response.send({ result: false });
+      } else {
+        if (result.length) {
+          response.send({ message: "Found", result: result });
+          async function main() {
+            // Generate test SMTP service account from ethereal.email
+            // Only needed if you don't have a real mail account for testing
+            let testAccount = await nodemailer.createTestAccount();
+
+            // create reusable transporter object using the default SMTP transport
+            var transporter = nodemailer.createTransport({
+              host: "smtp.mailtrap.io",
+              port: 2525,
+              auth: {
+                user: "1181de62d56717",
+                pass: "b24e37db5d7796"
+              }
+            });
+
+            // send mail with defined transport object
+            let info = await transporter.sendMail({
+              from: `${req.body.userEmail}`, // sender address
+              // to: `${result[0].userEmail}`, // list of receivers
+              to: `${result[0].userEmail}`, // list of receivers
+              // subject: `Task ${req.body.taskAppAcronym} Completed ✔`, // Subject line
+              subject: `${req.body.taskName}  in ${req.body.taskAppAcronym} has been completed `, // Subject line
+              text: `${req.body.userName} has completed ${
+                req.body.taskName
+              }  at '${new Date().toUTCString()}'`, // plain text body
+              html: `${req.body.userName} has completed ${
+                req.body.taskName
+              }  at '${new Date().toUTCString()}'` // html body
+            });
+
+            console.log("Message sent: %s", info.messageId);
+            // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
+
+            // Preview only available when sending through an Ethereal account
+            console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
+            // Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
+          }
+
+          main().catch(console.error);
+        } else {
+          response.send({ message: "Not Found", result: false });
+        }
+      }
+    }
+  );
+};
+
+// Create Task A3
+const createTaskA3 = (req, response) => {
+  sql.query(
+    `SELECT applicationRnum from application where applicationAcronym=?`,
+    [req.applicationAcronym],
+    function (err, rnum, fields) {
+      sql.query(
+        `SELECT COUNT(*) AS count FROM task WHERE taskAppAcronym=?`,
+        [req.taskAppAcronym],
+        function (err, count, fields) {
+          var id =
+            req.taskAppAcronym +
+            "_" +
+            // (rnum[0].applicationRnum + count[0].count);
+            rnum[0].applicationRnum;
+          sql.query(
+            "INSERT INTO task (taskId, taskName, taskDesc, taskNotes,  taskPlanMVPName, taskAppAcronym,taskState,taskCreator, taskOwner, taskCreate,taskAuditNotes) values(?,?,?,?,?,?,?,?,?,?,?)",
+            [
+              id,
+              req.taskName,
+              req.taskDesc,
+              req.taskNotes,
+              req.taskPlanMVPName,
+              req.taskAppAcronym,
+              req.taskState,
+              req.taskCreator,
+              req.taskOwner,
+              req.taskCreate,
+              req.taskAuditNotes
+            ],
+            (err, result) => {
+              if (err) {
+                console.log("what is error", err);
+                // response.send({ message: err.sqlMessage, result: false });
+                response(err, err.sqlMessage);
+              } else {
+                // response.send({ message: "Task Created", result: true });
+                response(null, {
+                  message: "Task Created",
+                  result: true
+                });
+              }
+            }
+          );
+        }
+      );
+    }
+  );
+};
+const updateAppRNUMA3 = (req, response) => {
+  sql.query(
+    `UPDATE  application SET applicationRnum=applicationRnum +1  where applicationAcronym=?`,
+    // [req.applicationRnumUpdate, req.applicationAcronym],
+    [req.applicationAcronym],
+
+    (err, result) => {
+      if (err) {
+        console.log("what is error", err);
+        // response.send({ message: err.sqlMessage, result: false });
+        response(err, err.sqlMessage);
+      } else {
+        // response.send({ message: "Task Created", result: true });
+        response(null, {
+          message: "RNUM updated",
+          result: true
+        });
       }
     }
   );
@@ -561,8 +806,13 @@ module.exports = {
   updateTaskPlan,
   updateTaskNotes,
   updateTaskPlanNotes,
-  updateTaskState,
+  // updateTaskState,
   updateTaskStateNotes,
   // appendAuditNotes,
-  checkGroup
+  checkGroup,
+  checkGroupFunction,
+  checkAppPermits,
+  getAllUserEmail,
+  createTaskA3,
+  updateAppRNUMA3
 };

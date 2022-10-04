@@ -18,6 +18,8 @@ function UserHome() {
   const [showAppList, setAppList] = useState([]);
 
   const [updateSave, setUpdateSave] = useState(false);
+  const [showIsAdmin, setIsPAdmin] = useState("");
+  const [showIsPPl, setIsPPl] = useState("");
 
   let username = sessionStorage.getItem("username");
 
@@ -49,17 +51,24 @@ function UserHome() {
     });
   };
 
-  // // API call for fetching groups
-  // const fetchGroups = () => {
-  //   userService.viewGroup().then((response) => {
-  //     setGroupList(
-  //       response
-  //       // response.map((group) => {
-  //       //   return group;
-  //       // })
-  //     );
-  //   });
-  // };
+  useEffect(() => {
+    userService
+      .checkGroupFunction({
+        userName: username,
+        groupName: "Admin"
+      })
+      .then((response) => {
+        setIsPAdmin(response.result);
+      });
+    userService
+      .checkGroupFunction({
+        userName: username,
+        groupName: "ProjectLead"
+      })
+      .then((response) => {
+        setIsPPl(response.result);
+      });
+  }, []);
 
   const handleClose = () => {
     setShowAddAppModal(false);
@@ -75,13 +84,20 @@ function UserHome() {
             <h5 className="px-4 color3">Welcome, {username}</h5>
           </div>
           <div className="col-1">
-            <Button
-              className="btnfont btn-success "
-              onClick={() => setShowAddAppModal(true)}
-            >
-              Create App +
-            </Button>
-            <AddAppModal show={showAddAppModal} close={handleClose} />
+            {showIsAdmin === true || showIsPPl === true ? (
+              <>
+                <Button
+                  className="btnfont btn-success "
+                  onClick={() => setShowAddAppModal(true)}
+                  // disabled={true}
+                >
+                  Create App +
+                </Button>
+                <AddAppModal show={showAddAppModal} close={handleClose} />
+              </>
+            ) : (
+              <></>
+            )}
           </div>
         </div>
       </div>
@@ -96,6 +112,8 @@ function UserHome() {
               <GridCard
                 app={app}
                 key={app.applicationAcronym}
+                isAdminPermit={showIsAdmin}
+                isProjectLeadPermit={showIsPPl}
                 mykey={key}
                 setUpdateSave={setUpdateSave}
               />

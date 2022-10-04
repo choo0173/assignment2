@@ -5,6 +5,7 @@ import Button from "react-bootstrap/esm/Button";
 import Form from "react-bootstrap/Form";
 import Col from "react-bootstrap/Col";
 import Row from "react-bootstrap/Row";
+import { toast } from "react-toastify";
 
 function AddAppModal(props) {
   const [showapplicationAcronym, setapplicationAcronym] = useState("");
@@ -28,7 +29,7 @@ function AddAppModal(props) {
       applicationRnum: showapplicationRnum,
       applicationStart: showapplicationStart,
       applicationEnd: showapplicationEnd,
-      applicationPOpen: showapplicationPCreate,
+      applicationPOpen: showapplicationPOpen,
       applicationPCreate: showapplicationPCreate,
       applicationPTodo: showapplicationPTodo,
       applicationPDoing: showapplicationPDoing,
@@ -36,9 +37,9 @@ function AddAppModal(props) {
     };
 
     userService.createApp(appInfo).then((response) => {
-      // notify(response.isGroup, response.bmessage);
+      notify(response);
       console.log(response);
-      if (response.result == true) {
+      if (response.create === "Application Created") {
         setapplicationAcronym("");
         setapplicationDesc("");
         setapplicationRnum("");
@@ -68,6 +69,18 @@ function AddAppModal(props) {
     });
   };
 
+  const notify = (error_msg) => {
+    if (error_msg.duplicate != false) {
+      toast.error(error_msg.duplicate, {});
+    }
+    if (error_msg.create != false) {
+      toast.success(error_msg.create, {});
+    }
+    if (error_msg.mandatory != false) {
+      toast.warning(error_msg.mandatory, {});
+    }
+  };
+
   return (
     <>
       <Modal size="xl" show={props.show} cancel={props.close} centered>
@@ -78,8 +91,9 @@ function AddAppModal(props) {
           <Form>
             <Row className="mb-2">
               <Form.Group as={Col}>
-                <Form.Label>Title</Form.Label>
+                <Form.Label>Title *</Form.Label>
                 <Form.Control
+                  required
                   placeholder="Application Title"
                   onChange={(e) => {
                     setapplicationAcronym(e.target.value);
@@ -88,8 +102,9 @@ function AddAppModal(props) {
                 />
               </Form.Group>
               <Form.Group as={Col}>
-                <Form.Label>RNumber</Form.Label>
+                <Form.Label>RNumber *</Form.Label>
                 <Form.Control
+                  required="true"
                   type="number"
                   precision={1}
                   step={1}
@@ -100,7 +115,7 @@ function AddAppModal(props) {
                 />
               </Form.Group>
               <Form.Group as={Col}>
-                <Form.Label>Start Date</Form.Label>
+                <Form.Label>Start Date *</Form.Label>
                 <Form.Control
                   type="date"
                   onChange={(e) => {
@@ -110,7 +125,7 @@ function AddAppModal(props) {
                 />
               </Form.Group>{" "}
               <Form.Group as={Col}>
-                <Form.Label>End Date</Form.Label>
+                <Form.Label>End Date *</Form.Label>
                 <Form.Control
                   type="date"
                   onChange={(e) => {
@@ -135,7 +150,7 @@ function AddAppModal(props) {
 
             <Row className="mb-3">
               <Form.Group as={Col}>
-                <Form.Label>Permit Create</Form.Label>
+                <Form.Label>Permit Create *</Form.Label>
                 <Form.Select
                   className="px-1"
                   // defaultValue="Choose..."
@@ -156,7 +171,7 @@ function AddAppModal(props) {
               </Form.Group>
 
               <Form.Group as={Col}>
-                <Form.Label>Permit Open</Form.Label>
+                <Form.Label>Permit Open *</Form.Label>
                 <Form.Select
                   className="px-1"
                   // defaultValue="Choose..."
@@ -177,7 +192,7 @@ function AddAppModal(props) {
               </Form.Group>
 
               <Form.Group as={Col}>
-                <Form.Label>Permit To Do</Form.Label>
+                <Form.Label>Permit To Do *</Form.Label>
                 <Form.Select
                   className="px-1"
                   // defaultValue="Choose..."
@@ -198,7 +213,7 @@ function AddAppModal(props) {
               </Form.Group>
 
               <Form.Group as={Col}>
-                <Form.Label>Permit Doing</Form.Label>
+                <Form.Label>Permit Doing *</Form.Label>
                 <Form.Select
                   className="px-1"
                   // defaultValue="Choose..."
@@ -219,7 +234,7 @@ function AddAppModal(props) {
               </Form.Group>
 
               <Form.Group as={Col}>
-                <Form.Label>Permit Done</Form.Label>
+                <Form.Label>Permit Done *</Form.Label>
                 <Form.Select
                   className="px-2"
                   // defaultValue="Choose..."
