@@ -1,6 +1,7 @@
 // const bcrypt = require("bcrypt");
 const sql = require("../config/db.config");
 const nodemailer = require("nodemailer");
+var moment = require("moment");
 
 // =============== User ===============
 // Create User
@@ -651,6 +652,7 @@ const checkAppPermits = (req, response) => {
 
 // Email
 const getAllUserEmail = (req, response) => {
+  const formatDate = moment().format("YYYY-MM-DD HH:mm:ss");
   sql.query(
     `SELECT userEmail from user where groupName like '%ProjectLead%'`,
     (err, result, data) => {
@@ -680,13 +682,13 @@ const getAllUserEmail = (req, response) => {
               // to: `${result[0].userEmail}`, // list of receivers
               to: `${result[0].userEmail}`, // list of receivers
               // subject: `Task ${req.body.taskAppAcronym} Completed ✔`, // Subject line
-              subject: `${req.body.taskName}  in ${req.body.taskAppAcronym} has been completed `, // Subject line
-              text: `${req.body.userName} has completed ${
-                req.body.taskName
-              }  at '${new Date().toUTCString()}'`, // plain text body
-              html: `${req.body.userName} has completed ${
-                req.body.taskName
-              }  at '${new Date().toUTCString()}'` // html body
+              // subject: `${req.body.taskName}  in ${req.body.taskAppAcronym} has been completed `, // Subject line
+              subject: `${req.body.taskId} has been completed `, // Subject line
+              text: `${req.body.userName} has completed ${req.body.taskId}  at ${formatDate}`, // plain text body
+              // text: `${req.body.userName} has completed ${
+              //   req.body.taskName
+              // }  at '${new Date().toUTCString()}'`, // plain text body
+              html: `${req.body.userName} has completed ${req.body.taskId}  at ${formatDate}` // html body
             });
 
             console.log("Message sent: %s", info.messageId);
@@ -777,6 +779,235 @@ const updateAppRNUMA3 = (req, response) => {
   );
 };
 
+// const viewOneApps = (req, response) => {
+//   sql.query(
+//     `SELECT * FROM application WHERE applicationAcronym='${req.applicationAcronym}'`,
+//     (err, result) => {
+//       if (err) {
+//         response(err, null);
+//       } else {
+//         if (result.length == 0) {
+//           response(null, { message: "No records found.", result: null });
+//         } else {
+//           response(null, result);
+//         }
+//       }
+//     }
+//   );
+// };
+
+const sendEmail = (req, response) => {
+  const formatDate = moment().format("YYYY-MM-DD HH:mm:ss");
+  sql.query(
+    `SELECT userEmail from user where groupName like '%ProjectLead%'`,
+    (err, result, data) => {
+      if (err) {
+        // response.send({ result: false });
+        console.log(err);
+      } else {
+        if (result.length) {
+          async function main() {
+            var transporter = nodemailer.createTransport({
+              host: "smtp.mailtrap.io",
+              port: 2525,
+              auth: {
+                user: "1181de62d56717",
+                pass: "b24e37db5d7796"
+              }
+            });
+            // send mail with defined transport object
+            let info = transporter.sendMail({
+              from: `${req.userEmail}`, // sender address
+              to: `${result[0].userEmail}`, // list of receivers} has been completed `, // Subject line
+              subject: `${req.taskId} has been completed `, // Subject line
+              text: `${req.userName} has completed ${req.taskId}  at ${formatDate}`, // plain text body
+              html: `${req.userName} has completed ${req.taskId}  at ${formatDate}` // html body
+            });
+            return;
+          }
+          main().catch(console.error);
+        } else {
+          response.send({ message: "Not Found", result: false });
+        }
+      }
+    }
+  );
+};
+
+// ============== Assignment 3 ====================
+const CreateTask = (req, response) => {
+  const formatDate = moment().format("YYYY-MM-DD HH:mm:ss");
+  sql.query(
+    `SELECT applicationRnum from application where applicationAcronym=?`,
+    [req.taskAppAcronym],
+    (err, result) => {
+      if (err) {
+        response(err, err.sqlMessage);
+      } else {
+        if (!result.length) {
+          response(err, { statuse: false, message: "Task App not Found" });
+          console.log("Doneee");
+        } else {
+          var id = req.taskAppAcronym + "_" + result[0].applicationRnum;
+
+          sql.query(
+            "INSERT INTO task (taskId, taskName, taskDesc, taskNotes, taskPlanMVPName, taskAppAcronym,taskState,taskCreator, taskOwner, taskCreate) values(?,?,?,?,?,?,?,?,?,?)",
+            [
+              id,
+              req.taskName,
+              req.taskDesc,
+              "",
+              req.taskPlanMVPName,
+              req.taskAppAcronym,
+              "open",
+              req.userName,
+              req.userName,
+              formatDate
+
+              // req.taskCreate //use date.now
+            ],
+            (err, result) => {
+              if (err) {
+                console.log("what is error", err);
+                response(err, err.sqlMessage);
+
+                console.log(result);
+              } else {
+                response(null, {
+                  result: true,
+                  taskId: id
+                });
+              }
+            }
+          );
+        }
+      }
+    }
+    // }
+  );
+};
+
+// Get tasks by state
+const GetTaskByState = (req, response) => {
+  sql.query(
+    `SELECT * FROM task WHERE taskAppAcronym= '${req.taskAppAcronym}' AND taskState= '${req.taskState}'  `,
+    (err, result) => {
+      if (err) {
+        response(err, null);
+      } else {
+        if (result.length == 0) {
+          response(null, {
+            message: "No records found.",
+            result: null,
+            searchstatus: false
+          });
+        } else {
+          response(null, result);
+        }
+      }
+    }
+  );
+};
+
+//Promote task state
+const PromoteTask2Done = (req, response) => {
+  sql.query(
+    `SELECT * FROM task WHERE taskId= '${req.taskId}'`,
+    [req.taskId],
+    (err, result) => {
+      if (err) {
+        console.log(err);
+      } else {
+        console.log(result);
+        if (result.length == 0) {
+          response(null, {
+            message: "No records found.",
+            result: null,
+            searchstatus: false
+          });
+        } else {
+          console.log(result[0].taskState);
+          if (result[0].taskState === "doing") {
+            sql.query(
+              `UPDATE task SET taskState = 'done' WHERE taskId= ? `,
+              [req.taskId],
+              (err, result) => {
+                if (err) {
+                  response(err, null);
+                } else {
+                  response(null, result);
+                }
+              }
+            );
+          } else {
+            response(null, {
+              message: "Invalid task state",
+              result: null,
+              taskstatus: false
+            });
+          }
+        }
+      }
+    }
+  );
+};
+
+const checkAppPermit = (req, response) => {
+  sql.query(
+    `SELECT applicationPCreate, applicationPDoing, applicationPDone FROM application WHERE applicationAcronym = '${req.taskAppAcronym}'
+    `,
+    (err, res) => {
+      if (err) {
+        response(err, { result: false });
+      } else {
+        if (res.length != 0) {
+          response(null, { message: "Success", result: res[0] });
+        } else {
+          // response(null, { message: "Fail", result: null });
+          // if (!result.length) {
+          response(err, { statuse: false, message: "Task App not Found" });
+          //   console.log("Doneee");
+          // }
+        }
+      }
+    }
+  );
+};
+
+const viewPlanbyplan = (req, response) => {
+  sql.query(
+    `SELECT planMVPName FROM plan WHERE planMVPName= '${req.taskPlanMVPName}' AND planAppAcronym='${req.taskAppAcronym}' `,
+    (err, result) => {
+      if (err) {
+        response(err, null);
+      } else {
+        if (result.length == 0) {
+          response(null, { message: "No records found.", result: null });
+        } else {
+          response(null, result);
+        }
+      }
+    }
+  );
+};
+
+const viewAppbyId = (req, response) => {
+  sql.query(
+    `SELECT taskAppAcronym FROM task WHERE taskId= '${req.taskId}'`,
+    (err, result) => {
+      if (err) {
+        response(err, null);
+      } else {
+        if (result.length == 0) {
+          response(null, { message: "No records found.", result: null });
+        } else {
+          response(null, result);
+        }
+      }
+    }
+  );
+};
+
 module.exports = {
   createUser,
   viewUser,
@@ -813,6 +1044,13 @@ module.exports = {
   checkGroupFunction,
   checkAppPermits,
   getAllUserEmail,
+  sendEmail,
   createTaskA3,
-  updateAppRNUMA3
+  updateAppRNUMA3,
+  CreateTask,
+  GetTaskByState,
+  PromoteTask2Done,
+  checkAppPermit,
+  viewAppbyId,
+  viewPlanbyplan
 };

@@ -17,6 +17,23 @@ app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}.`);
 });
 
+//middleware to access logged in user
+app.use((req, res, next) => {
+  // res.locals.currentUser = req.user;
+  req.user = "Logged in user";
+  res.setHeader("Content-Type", "application/json");
+  // res.setHeader("Accept", "application/json");
+
+  //Decoding URL
+  try {
+    decodeURIComponent(req.path);
+  } catch (e) {
+    //Decode fails if url not encoded properly
+    return res.status(400).send({ code: 400 });
+  }
+  next();
+});
+
 // User
 app.post("/createUser", controller.createUser);
 app.get("/viewUser", controller.viewUser);
@@ -49,3 +66,22 @@ app.post("/countTasksbyApp", controller.countTasksbyApp);
 app.post("/checkAppPermits", controller.checkAppPermits);
 app.post("/checkGroupFunction", controller.checkGroupFunction);
 app.post("/allUserEmail", user_model.getAllUserEmail);
+
+// Assignment 3
+app.post(
+  "/api/CreateTask",
+  [controller.checkLogin, controller.checkCreatePermit],
+  controller.CreateTask
+);
+app.post(
+  "/api/GetTaskByState",
+  [controller.checkLogin],
+  controller.GetTaskByState
+);
+app.post(
+  "/api/PromoteTask2Done",
+  [controller.checkLogin, controller.checkPromotePermit],
+  controller.PromoteTask2Done
+);
+
+app.post("/api/*", controller.error);

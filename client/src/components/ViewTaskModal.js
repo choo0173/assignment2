@@ -47,16 +47,20 @@ function ViewTaskModal(props) {
 
     const auditlog =
       formatDate + " " + username + " added a note: \n" + showtaskNotes;
-    const passauditlog = !props.taskDetails.taskAuditNotes
-      ? auditlog
-      : auditlog + "\n" + props.taskDetails.taskAuditNotes;
+    const planlog =
+      formatDate + " " + username + " changed plan to " + showtaskPlanMVPName;
+    // const passauditlog = !props.taskDetails.taskAuditNotes
+    //   ? auditlog
+    //   : auditlog + "\n" + props.taskDetails.taskAuditNotes;
 
-    // const planColor = {
-    //   planAppAcronym: appName,
-    //   planMVPName: showtaskPlanMVPName
-    // };
-
-    // let plancolor = await userService.viewPlanColor(planColor);
+    const passauditlog =
+      showtaskPlanMVPName === props.taskDetails.taskPlanMVPName
+        ? !showtaskNotes
+          ? props.taskDetails.taskAuditNotes
+          : auditlog + "\n" + props.taskDetails.taskAuditNotes
+        : !showtaskNotes
+        ? planlog + "\n" + props.taskDetails.taskAuditNotes
+        : auditlog + "\n" + planlog + "\n" + props.taskDetails.taskAuditNotes;
 
     const updateTaskInfo = {
       taskId: props.taskDetails.taskId,
@@ -66,15 +70,9 @@ function ViewTaskModal(props) {
       taskPlanMVPName: showtaskPlanMVPName,
       taskAppAcronym: showtaskAppAcronym,
       taskAuditNotes: passauditlog,
-      // taskPlanColor: "plancolor",
       taskOwner: username
     };
-    // const planColor = {
-    //   planAppAcronym: appName,
-    //   planMVPName: showtaskPlanMVPName
-    // };
 
-    // let plancolor = await userService.viewPlanColor(planColor);
     // Update Task Notes (Audit trail)
     userService.updateTask(updateTaskInfo).then((response) => {
       notify(
@@ -90,17 +88,10 @@ function ViewTaskModal(props) {
         console.log("task updated");
         settaskNotes("");
         setUpdateSave(true);
-
-        // props.close();
-        console.log("Hia");
       } else {
         console.log("Stop");
       }
     });
-    // var textarea = document.getElementById("AuditTrailTextArea");
-    // var scrollTextAreaHeight = textarea.scrollHeight + 5000;
-    // textarea.scrollTop = scrollTextAreaHeight;
-    // console.log(textarea);
     props.setSubmit(true);
   }
 
@@ -115,9 +106,13 @@ function ViewTaskModal(props) {
       toast.info("Task Not Updated", {});
     } else if (isUpdatePlan === "fail" && isUpdateNotes === "success") {
       toast.success("Task updated", {});
-    } else if (isUpdatePlan === "success" && isUpdateNotes === "fail") {
-      toast.info("Please add a note when changing plan", {});
-    } else {
+    }
+    // else if (isUpdatePlan === "success" && isUpdateNotes === "fail") {
+    //   // toast.info("Please add a note when changing plan", {});
+    //   toast.warning("NEED TO CHANGE THIS", {});
+    //   // toast.success("Task updated", {});
+    // }
+    else {
       toast.success("Task updated", {});
     }
   };
@@ -175,43 +170,51 @@ function ViewTaskModal(props) {
                 </Form.Group>
               </Form.Group>
             </Row>
-            {props.showIsPOpenRights == true ||
-            props.showIsPTodoRights == true ||
-            props.showIsPDoingRights == true ||
-            props.showIsPDoneRights == true ||
-            props.showIsPDoneRights == true ? (
-              <Form.Group className="mb-3">
-                <Form.Label>Description</Form.Label>
-                <Form.Control
-                  as="textarea"
-                  rows={2}
-                  value={showtaskDesc}
-                  onChange={(e) => {
-                    settaskDesc(e.target.value);
-                  }}
-                />
-              </Form.Group>
-            ) : props.showIsPOpenRights == false ||
+            {
+              // props.showIsPOpenRights == true ||
+              // props.showIsPTodoRights == true ||
+              // props.showIsPDoingRights == true ||
+              // props.showIsPDoneRights == true ||
+              // props.showIsPDoneRights == true ? (
+              //   <Form.Group className="mb-3">
+              //     <Form.Label>Description</Form.Label>
+              //     <Form.Control
+              //       as="textarea"
+              //       rows={2}
+              //       value={showtaskDesc}
+              //       onChange={(e) => {
+              //         settaskDesc(e.target.value);
+              //       }}
+              //     />
+              //   </Form.Group>
+              // ) :
+              props.showIsPOpenRights == false ||
               props.showIsPTodoRights == false ||
               props.showIsPDoingRights == false ||
               props.showIsPDoneRights == false ||
               props.showIsPDoneRights == false ||
+              props.showIsPOpenRights == true ||
+              props.showIsPTodoRights == true ||
+              props.showIsPDoingRights == true ||
+              props.showIsPDoneRights == true ||
+              props.showIsPDoneRights == true ||
               showtaskState === "close" ? (
-              <Form.Group className="mb-3">
-                <Form.Label>Description</Form.Label>
-                <Form.Control
-                  as="textarea"
-                  rows={2}
-                  value={showtaskDesc}
-                  disabled
-                />
-              </Form.Group>
-            ) : (
-              <Form.Group className="mb-3">
-                <Form.Label>Description</Form.Label>
-                <Form.Control as="textarea" rows={2} value={showtaskDesc} />
-              </Form.Group>
-            )}
+                <Form.Group className="mb-3">
+                  <Form.Label>Description</Form.Label>
+                  <Form.Control
+                    as="textarea"
+                    rows={2}
+                    value={showtaskDesc}
+                    disabled
+                  />
+                </Form.Group>
+              ) : (
+                <Form.Group className="mb-3">
+                  <Form.Label>Description</Form.Label>
+                  <Form.Control as="textarea" rows={2} value={showtaskDesc} />
+                </Form.Group>
+              )
+            }
 
             <Row className="mb-2">
               {showtaskState === "close" ? (

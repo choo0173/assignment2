@@ -57,28 +57,13 @@ function AddTaskModal(props) {
     });
   };
 
-  // const fetchPlanColor = async (info) => {
-  //   const data = await userService.viewPlanColor(info);
-  //   return data.result;
-  // };
-
   async function handleCreateTask(e) {
     e.preventDefault();
 
-    const auditlog = formatDate + " " + username + " created app";
+    const auditlog = formatDate + " " + username + " created task";
 
     const taskRnumCount = showAppRNUM + showTaskCount;
     const taskRnum = appName + "_" + taskRnumCount;
-    // const taskRnum = appName + "_" + showAppRNUM;
-
-    // const planColor = {
-    //   planAppAcronym: appName,
-    //   planMVPName: showtaskPlanMVPName
-    // };
-
-    // let plancolor = await userService.viewPlanColor(planColor);
-
-    // console.log(plancolor);
 
     const taskInfo = {
       applicationAcronym: appName,

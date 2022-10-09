@@ -736,9 +736,11 @@ const updateTask = async (req, res) => {
         res.send({ isUpdatePlan: "fail", isUpdateNotes: "success" });
       }
     });
-  } else if (taskplanmvpname && !tasknotes) {
-    res.send({ isUpdatePlan: "success", isUpdateNotes: "fail" });
-  } else {
+  }
+  // else if (taskplanmvpname && !tasknotes) {
+  //   res.send({ isUpdatePlan: "success", isUpdateNotes: "fail" });
+  // }
+  else {
     // If taskPlanColor is undefined
     if (taskplanmvpname === "none") {
       usermodel.updateTaskPlanNotes(req.body, (err, data) => {
@@ -901,6 +903,388 @@ const checkAppPermits = (req, res) => {
   });
 };
 
+// ================== Assignment 3 ====================
+const CreateTask = async (req, res) => {
+  if (!req.body.taskName) {
+    // res.status(411).json({ code: 411, message: "Task Name Empty" });
+    res.status(411).json({ code: 411 });
+  } else if (!req.body.taskAppAcronym) {
+    // res.status(411).json({ code: 411, message: "Task App Acronym Empty" });
+    res.status(411).json({ code: 411 });
+  } else {
+    if (req.body.taskPlanMVPName) {
+      usermodel.viewPlanbyplan(req.body, (err, dataa) => {
+        if (err) {
+          console.log(err);
+        } else {
+          if (dataa.result === null) {
+            // res.status(404).json({ code: 404, message: "Task Plan Not Found" });
+            res.status(404).json({ code: 404 });
+          } else {
+            usermodel.CreateTask(req.body, async (err, data) => {
+              if (err) {
+                if (err.errno === 1062) {
+                  res
+                    .status(400)
+                    // .json({ code: 400, message: "Duplicate Task" });
+                    .json({ code: 400 });
+                }
+              } else {
+                console.log(data);
+                if (data.statuse === false) {
+                  res
+                    .status(404)
+                    // .json({ code: 404, message: "Task App Not Found" });
+                    .json({ code: 404 });
+                } else {
+                  res.status(201).json({
+                    code: 201,
+                    // message: "Task Created Successfully",
+                    taskId: data.taskId
+                  });
+
+                  const updateInfo = {
+                    applicationRnumUpdate: req.body.applicationRnum,
+                    applicationAcronym: req.body.taskAppAcronym
+                  };
+                  usermodel.updateAppRNUMA3(updateInfo, (err, data) => {
+                    if (err) {
+                      console.log(err);
+                    } else {
+                      console.log("YESSSS");
+                    }
+                  });
+                }
+              }
+            });
+          }
+        }
+      });
+    } else {
+      usermodel.CreateTask(req.body, async (err, data) => {
+        if (err) {
+          if (err.errno === 1062) {
+            // res.status(400).json({ code: 400, message: "Duplicate Task" });
+            res.status(400).json({ code: 400 });
+          }
+        } else {
+          console.log(data);
+          if (data.statuse === false) {
+            // res.status(404).json({ code: 404, message: "Task App Not Found" });
+            res.status(404).json({ code: 404 });
+          } else {
+            res.status(201).json({
+              code: 201,
+              // message: "Task Created Successfully",
+              taskId: data.taskId
+            });
+
+            const updateInfo = {
+              applicationRnumUpdate: req.body.applicationRnum,
+              applicationAcronym: req.body.taskAppAcronym
+            };
+            usermodel.updateAppRNUMA3(updateInfo, (err, data) => {
+              if (err) {
+                console.log(err);
+              } else {
+                console.log("YESSSS");
+              }
+            });
+          }
+        }
+      });
+    }
+
+    // usermodel.CreateTask(req.body, async (err, data) => {
+    //   if (err) {
+    //     if (err.errno === 1062) {
+    //       res.status(400).json({ code: 400, message: "Duplicate Task" });
+    //     }
+    //   } else {
+    //     console.log(data);
+    //     if (data.statuse === false) {
+    //       res.status(404).json({ code: 404, message: "Task App Not Found" });
+    //     } else {
+    //       res.status(201).json({
+    //         code: 201,
+    //         message: "Task Created Successfully",
+    //         taskId: data.taskId
+    //       });
+
+    //       const updateInfo = {
+    //         applicationRnumUpdate: req.body.applicationRnum,
+    //         applicationAcronym: req.body.taskAppAcronym
+    //       };
+    //       usermodel.updateAppRNUMA3(updateInfo, (err, data) => {
+    //         if (err) {
+    //           console.log(err);
+    //         } else {
+    //           console.log("YESSSS");
+    //         }
+    //       });
+    //     }
+    //   }
+    // });
+  }
+};
+
+// View Tasks by state
+const GetTaskByState = (req, res) => {
+  if (!req.body.taskState) {
+    // res.status(411).json({ code: 411, message: "Task State Empty" });
+    res.status(411).json({ code: 411 });
+  } else if (!req.body.taskAppAcronym) {
+    // res.status(411).json({ code: 411, message: "Task App Acronym Empty" });
+    res.status(411).json({ code: 411 });
+  } else {
+    if (
+      req.body.taskState === "open" ||
+      req.body.taskState === "todo" ||
+      req.body.taskState === "doing" ||
+      req.body.taskState === "done" ||
+      req.body.taskState === "close"
+    ) {
+      usermodel.GetTaskByState(req.body, (err, data) => {
+        if (err) {
+          res.send(data);
+        } else {
+          if (data.searchstatus === false) {
+            res
+              .status(404)
+              // .json({ code: 404, message: "Task App Acronym not found" });
+              .json({ code: 404 });
+          } else {
+            res.status(200).json({ code: 200, message: data });
+          }
+        }
+      });
+    } else {
+      // res.status(405).json({ code: 405, message: "Invalid Task State" });
+      res.status(405).json({ code: 405 });
+    }
+  }
+};
+
+// Promote task 2 done
+const PromoteTask2Done = async (req, res) => {
+  if (!req.body.taskId) {
+    // res.status(411).json({ code: 411, message: "Task Id Empty" });
+    res.status(411).json({ code: 411 });
+  } else {
+    usermodel.PromoteTask2Done(req.body, (err, data) => {
+      if (err) {
+        console.log(err);
+      } else {
+        if (data.searchstatus === false) {
+          // res.status(404).json({ code: 404, message: "Task Id not found" });
+          res.status(404).json({ code: 404 });
+        } else if (data.taskstatus === false) {
+          res
+            .status(406)
+            // .json({ code: 406, message: "Current state is not at doing" });
+            .json({ code: 406 });
+        } else {
+          usermodel.viewOneUser(req.body, (err, data) => {
+            if (err) {
+              console.log(err);
+            } else {
+              // console.log(data.result[0]);
+              // console.log("HIIII");
+              let info = {
+                userName: req.body.userName,
+                taskId: req.body.taskId,
+                userEmail: data.result[0].userEmail
+              };
+              usermodel.sendEmail(info, (err, data) => {
+                if (err) {
+                  console.log(err);
+                }
+              });
+              res.status(200).json({
+                code: 200
+                // message: "Task successfully promoted to done"
+              });
+            }
+          });
+        }
+      }
+    });
+  }
+};
+
+// Check Login
+const checkLogin = async (req, res, next) => {
+  let loginusername = req.body.userName;
+  let loginuserpwd = req.body.userPwd;
+  if (!loginusername || !loginuserpwd) {
+    // res.status(411).json({ code: 411, message: "Empty Fields" });
+    res.status(411).json({ code: 411 });
+  } else if (
+    !checkUserName(req.body.userName) ||
+    !checkPassword(req.body.userPwd)
+  ) {
+    res
+      .status(401)
+      // .json({ code: 401, message: "Invalid username or password" });
+      .json({ code: 401 });
+  } else if (
+    checkUserName(req.body.userName) &&
+    checkPassword(req.body.userPwd)
+  ) {
+    usermodel.viewOneUser(req.body, (err, data) => {
+      if (err) {
+        res.send({ message: err.sqlMessage, result: null });
+      } else if (data.resultlength === 0) {
+        res.status(403).json({ code: 403 });
+      } else {
+        parseddata = JSON.parse(JSON.stringify(data));
+
+        userstatus = parseddata.result[0].userStatus;
+        hashedPwd = parseddata.result[0].userPwd;
+
+        bcrypt.compare(req.body.userPwd, hashedPwd).then(async (match) => {
+          if (!match) {
+            res.status(512).json({
+              code: 512,
+              message: "Not Permitted"
+            });
+          } else if (userstatus == "0") {
+            // res.status(403).json({ code: 403, message: "User Is disabled" });
+            res.status(403).json({ code: 403 });
+          } else {
+            next();
+          }
+        });
+      }
+    });
+  }
+};
+
+// Check permits
+const checkCreatePermit = (req, res, next) => {
+  // console.log(req.body.taskAppAcronym);
+  if (!req.body.taskAppAcronym) {
+    // res.status(411).json({ code: 411, message: "Task App Acronym Empty" });
+    res.status(411).json({ code: 411 });
+  } else {
+    usermodel.checkAppPermit(req.body, (err, data) => {
+      if (err) {
+        res.send(err, { message: err.sqlMessage });
+      } else {
+        if (data.statuse === false) {
+          // res.status(404).json({ code: 404, message: "Task App Not Found" });
+          res.status(404).json({ code: 404 });
+        } else {
+          let groupName = data.result.applicationPCreate;
+          let userName = req.body.userName;
+          let info = {
+            userName: userName,
+            groupName: groupName
+          };
+          usermodel.checkGroupFunction(info, (err, data) => {
+            if (err) {
+              res.send(err, { message: err.sqlMessage });
+            } else {
+              console.log(data.result);
+              if (data.result === true) {
+                next();
+              } else {
+                // res.status(512).json({ code: 512, message: "not permitted" });
+                res.status(512).json({ code: 512 });
+              }
+            }
+          });
+        }
+      }
+    });
+  }
+};
+
+const checkPromotePermit = (req, res, next) => {
+  if (!req.body.taskId) {
+    // res.status(411).json({ code: 411, message: "Task Id Empty" });
+    res.status(411).json({ code: 411 });
+  } else {
+    usermodel.viewAppbyId(req.body, (err, data) => {
+      if (err) {
+        console.log(err);
+      } else {
+        if (data.result === null) {
+          // res.status(404).json({ code: 404, message: "Task Id not found" });
+          res.status(404).json({ code: 404 });
+        } else {
+          console.log(data[0].taskAppAcronym);
+          let appexist = {
+            taskAppAcronym: data[0].taskAppAcronym,
+            userName: req.body.userName
+          };
+          usermodel.checkAppPermit(appexist, (err, data) => {
+            if (err) {
+              res.send(err, { message: err.sqlMessage });
+            } else {
+              let groupName = data.result.applicationPDoing;
+              let userName = appexist.userName;
+              let info = {
+                userName: userName,
+                groupName: groupName
+              };
+              usermodel.checkGroupFunction(info, (err, data) => {
+                if (err) {
+                  res.send(err, { message: err.sqlMessage });
+                } else {
+                  console.log(data.result);
+                  if (data.result === true) {
+                    next();
+                  } else {
+                    res
+                      .status(512)
+                      // .json({ code: 512, message: "not permitted" });
+                      .json({ code: 512 });
+                  }
+                }
+              });
+              // }
+            }
+          });
+        }
+      }
+    });
+    // usermodel.checkAppPermit(req.body, (err, data) => {
+    //   if (err) {
+    //     res.send(err, { message: err.sqlMessage });
+    //   } else {
+    //     if (data.statuse === false) {
+    //       res.status(404).json({ code: 404, message: "Task App Not Found" });
+    //     } else {
+    //       let groupName = data.result.applicationPDoing;
+    //       let userName = req.body.userName;
+    //       let info = {
+    //         userName: userName,
+    //         groupName: groupName
+    //       };
+    //       usermodel.checkGroupFunction(info, (err, data) => {
+    //         if (err) {
+    //           res.send(err, { message: err.sqlMessage });
+    //         } else {
+    //           console.log(data.result);
+    //           if (data.result === true) {
+    //             next();
+    //           } else {
+    //             res.status(512).json({ code: 512, message: "not permitted" });
+    //           }
+    //         }
+    //       });
+    //     }
+    //   }
+    // });
+  }
+};
+
+//Error handling
+const error = async (req, res) => {
+  res.status(400).json({ code: 400 });
+};
+
 module.exports = {
   createUser,
   viewUser,
@@ -929,5 +1313,133 @@ module.exports = {
   checkGroup,
   checkAppPermits,
   checkGroupFunction,
-  createTaskA3
+  createTaskA3,
+  CreateTask,
+  GetTaskByState,
+  PromoteTask2Done,
+  checkLogin,
+  checkCreatePermit,
+  checkPromotePermit,
+  error
 };
+
+// Custom API for A3
+// export const logging = async (req, res) => {
+//   let trueFalse = false;
+//   try {
+//     const user = await Users.findAll({
+//       where: { username: req.body.username }
+//     });
+//     if (user.length > 0) {
+//       const match = await bcrypt.compare(req.body.password, user[0].password);
+//       if (!match) throw e;
+//       const username = user[0].username;
+//       const userStatus = user[0].status;
+//       if (!userStatus) throw res.status(403).json({ code: 403 });
+//       trueFalse = true;
+//       return trueFalse;
+//     } else {
+//       return trueFalse;
+//     }
+//   } catch (error) {
+//     trueFalse = false;
+//     return trueFalse;
+//   }
+// };
+
+// export const checkGroup = async (userId, groupName) => {
+//   // take in the username to get the usergroup from backend to check against the groupname provided.
+//   let trueFalse = false;
+//   const user = await Users.findOne({
+//     attributes: ["userGroup"],
+//     where: { username: userId }
+//   });
+//   if (groupName == user.userGroup) {
+//     trueFalse = true;
+//     return trueFalse;
+//   } else {
+//     trueFalse = false;
+//     return trueFalse;
+//   }
+// };
+
+// export const createTask = async (req, res) => {
+//   let app = [];
+//   let id = "";
+//   let id2 = "";
+//   let plan = [];
+
+//   try {
+//     if (!req.body.username) throw res.status(411).json({ code: 411 });
+//     if (!req.body.password) throw res.status(411).json({ code: 411 });
+//     if (!req.body.task_name) throw res.status(411).json({ code: 411 });
+//     if (!req.body.task_app_acronym) throw res.status(411).json({ code: 411 });
+
+//     const checking = await logging(req, res);
+
+//     if (checking) {
+//       app = await App.findAll({
+//         attributes: ["app_Rnumber", "app_permitCreate"],
+//         where: { app_acronym: req.body.task_app_acronym }
+//       });
+//       // check group function
+//       const checking1 = await checkGroup(
+//         req.body.username,
+//         app[0].app_permitCreate
+//       );
+
+//       if (checking1) {
+//         plan = await Plan.findAll({
+//           attributes: ["plan_MVPName"],
+//           where: { plan_appAcronym: req.body.task_app_acronym }
+//         });
+//         if (
+//           app.length > 0 &&
+//           (plan.findIndex(
+//             (element) =>
+//               element.plan_MVPName === req.body.task_plan.toLowerCase()
+//           ) > -1 ||
+//             req.body.task_plan === "")
+//         ) {
+//           await App.update(
+//             {
+//               app_Rnumber: app[0].app_Rnumber + 1
+//             },
+//             { where: { app_acronym: req.body.task_app_acronym } }
+//           );
+
+//           id2 = id.concat(
+//             req.body.task_app_acronym.toLowerCase() + "_" + app[0].app_Rnumber
+//           );
+//           // console.log(id2)
+
+//           try {
+//             await Task.create({
+//               task_name: req.body.task_name,
+//               task_description: req.body.task_description,
+//               task_notes: req.body.username.concat(" state: open @ " + Date()), //try whether if this works anot.
+//               task_id: id2,
+//               task_plan: req.body.task_plan,
+//               task_appAcronym: req.body.task_app_acronym,
+//               task_owner: req.body.username,
+//               task_creator: app[0].app_permitCreate, // cannot hard code this
+//               task_state: "open",
+//               task_createDate: new Date().toISOString().split("T")[0]
+//             });
+//             res.status(201).json({ code: 201, task_Id: id2 });
+//           } catch (error) {
+//             console.log(error);
+//           }
+//         } else {
+//           res.status(404).json({ code: 404 });
+//         }
+//       } else {
+//         throw res.status(512).json({ code: 512 });
+//       }
+//     } else {
+//       res.status(401).json({ code: 401 });
+//     }
+//   } catch (error) {
+//     console.log("hello");
+//   }
+// };

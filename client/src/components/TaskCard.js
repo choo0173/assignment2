@@ -156,6 +156,7 @@ function TaskCard(props) {
             });
           if (props.task.taskState === arrayStates[2]) {
             const emailInfo = {
+              taskId: props.task.taskId,
               taskName: props.task.taskName,
               userName: username,
               taskAppAcronym: appName,
